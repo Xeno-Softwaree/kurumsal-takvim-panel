@@ -1,0 +1,16 @@
+{
+  "name": "Tuzla Belediyesi Afet Yönetimi",
+  "short_name": "Tuzla Afet",
+  "description": "Afet İşleri ve Risk Yönetimi Sistemi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#161B22",
+  "theme_color": "#161B22",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

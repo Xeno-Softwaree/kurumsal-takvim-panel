@@ -1,0 +1,91 @@
+﻿
+ÔòöÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòù
+Ôòæ   ­şÜÇ Neon ÔåÆ Supabase Veri Ta┼ş─▒ma Arac─▒     Ôòæ
+ÔòÜÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòØ
+
+­şôí Ba─şlant─▒lar test ediliyor...
+node : (node:5724) Warning:
+ SECURITY WARNING: The SSL 
+modes 'prefer', 'require', 
+and 'verify-ca' are treated
+ as aliases for 'verify-ful
+l'.
+At line:1 char:1
++ node migrate-neon-to-supa
+base.js 2>&1 | Out-File -En
+coding utf8 migra ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ((no  
+  de:5724) War... 'verif   
+ y-full'.:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+In the next major version (
+pg-connection-string v3.0.0
+ and pg v9.0.0), these mode
+s will adopt standard libpq
+ semantics, which have weak
+er security guarantees.
+
+To prepare for this change:
+- If you want the current b
+ehavior, explicitly use 'ss
+lmode=verify-full'
+- If you want libpq compati
+bility now, use 'uselibpqco
+mpat=true&sslmode=require'
+
+See https://www.postgresql.
+org/docs/current/libpq-ssl.
+html for libpq SSL mode def
+initions.
+(Use `node --trace-warnings
+ ...` to show where the war
+ning was created)
+  Ô£à Neon ba─şlant─▒s─▒ OK (Wed Apr 01 2026 03:16:46 GMT+0300 (GMT+03:00))
+  Ô£à Supabase ba─şlant─▒s─▒ OK (Wed Apr 01 2026 03:16:47 GMT+0300 (GMT+03:00))
+
+­şö¿ Supabase tablolar─▒ haz─▒rlan─▒yor...
+  Ô£à Tablolar haz─▒r
+
+­şôè Neon veritaban─▒ durumu:
+  ­şôï admin_users: 11 kay─▒t
+  ­şôï events: 63 kay─▒t
+  ­şôï activity_logs: 105 kay─▒t
+  ­şôï reminder_deliveries: 36 kay─▒t
+  ­şôï settings: 1 kay─▒t
+  ­şôï notifications: 1599 kay─▒t
+  ­şôï documents: 1 kay─▒t
+
+­şöä Veri ta┼ş─▒ma ba┼şl─▒yor...
+
+  ­şöä admin_users: 11 kay─▒t ta┼ş─▒n─▒yor... Ô£à 11/11 aktar─▒ld─▒
+  ­şöä events: 63 kay─▒t ta┼ş─▒n─▒yor... Ô£à 63/63 aktar─▒ld─▒
+  ­şöä activity_logs: 105 kay─▒t ta┼ş─▒n─▒yor... Ô£à 105/105 aktar─▒ld─▒
+  ­şöä reminder_deliveries: 36 kay─▒t ta┼ş─▒n─▒yor... Ô£à 36/36 aktar─▒ld─▒
+  ­şöä settings: 1 kay─▒t ta┼ş─▒n─▒yor... Ô£à 1/1 aktar─▒ld─▒
+  ­şöä notifications: 1599 kay─▒t ta┼ş─▒n─▒yor... Ô£à 1599/1599 aktar─▒ld─▒
+  ­şöä documents: 1 kay─▒t ta┼ş─▒n─▒yor... Ô£à 1/1 aktar─▒ld─▒
+
+­şöı Do─şrulama yap─▒l─▒yor...
+  Ô£à admin_users: Neon=11 ÔåÆ Supabase=11
+  Ô£à events: Neon=63 ÔåÆ Supabase=63
+  Ô£à activity_logs: Neon=105 ÔåÆ Supabase=105
+  Ô£à reminder_deliveries: Neon=36 ÔåÆ Supabase=36
+  Ô£à settings: Neon=1 ÔåÆ Supabase=1
+  Ô£à notifications: Neon=1599 ÔåÆ Supabase=1599
+  Ô£à documents: Neon=1 ÔåÆ Supabase=1
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+­şÄë T├╝m veriler ba┼şar─▒yla ta┼ş─▒nd─▒!
+
+Sonraki ad─▒mlar:
+  1. Render dashboard ÔåÆ DATABASE_URL Supabase olarak ayarla
+  2. Deploy et ve uygulamay─▒ test et
+  3. Her ┼şey ├ğal─▒┼ş─▒yorsa Neon projesini silebilirsin
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+

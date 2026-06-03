@@ -1,0 +1,448 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────
+   DESIGN TOKENS  — Dark Theme
+───────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --app-bg:           #080c14;
+  --card-bg:          #0f1624;
+  --header-bg:        rgba(8, 12, 20, 0.96);
+  --sidebar-bg:       #090d17;
+  --sidebar-border:   rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --app-text:         #eef0f5;
+  --app-text-muted:   #6b7a99;
+  --app-text-subtle:  #3d4d6b;
+
+  /* Borders */
+  --card-border:      rgba(255, 255, 255, 0.07);
+  --border-strong:    rgba(255, 255, 255, 0.12);
+
+  /* Accent */
+  --accent:           #3b82f6;
+  --accent-soft:      rgba(59, 130, 246, 0.1);
+  --accent-glow:      rgba(59, 130, 246, 0.15);
+
+  /* Elevation shadows */
+  --shadow-xs:        0 1px 2px rgba(0,0,0,0.4);
+  --shadow-sm:        0 2px 6px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:        0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.25);
+  --shadow-lg:        0 8px 32px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3);
+
+  /* FullCalendar vars */
+  --fc-page-bg-color:               var(--app-bg);
+  --fc-neutral-bg-color:            var(--card-bg);
+  --fc-neutral-text-color:          var(--app-text);
+  --fc-border-color:                var(--card-border);
+  --fc-today-bg-color:              rgba(99, 102, 241, 0.12);
+  --fc-list-event-hover-bg-color:   rgba(99, 102, 241, 0.12);
+}
+
+/* ─────────────────────────────────────────────
+   DESIGN TOKENS  — Light Theme
+───────────────────────────────────────────── */
+:root.light {
+  color-scheme: light;
+
+  /* Backgrounds */
+  --app-bg:           #f0f4fa;
+  --card-bg:          #ffffff;
+  --header-bg:        rgba(240, 244, 250, 0.96);
+  --sidebar-bg:       #e8edf7;
+  --sidebar-border:   rgba(0, 0, 0, 0.08);
+
+  /* Text */
+  --app-text:         #0f172a;
+  --app-text-muted:   #5a6a8a;
+  --app-text-subtle:  #94a3b8;
+
+  /* Borders */
+  --card-border:      rgba(0, 0, 0, 0.08);
+  --border-strong:    rgba(0, 0, 0, 0.14);
+
+  /* Accent — keep blue */
+  --accent:           #2563eb;
+  --accent-soft:      rgba(37, 99, 235, 0.08);
+  --accent-glow:      rgba(37, 99, 235, 0.12);
+
+  /* Elevation shadows */
+  --shadow-xs:        0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm:        0 2px 6px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:        0 4px 16px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-lg:        0 8px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07);
+
+  /* FullCalendar vars */
+  --fc-page-bg-color:               var(--app-bg);
+  --fc-neutral-bg-color:            var(--card-bg);
+  --fc-neutral-text-color:          var(--app-text);
+  --fc-border-color:                var(--card-border);
+  --fc-today-bg-color:              rgba(37, 99, 235, 0.07);
+  --fc-list-event-hover-bg-color:   rgba(37, 99, 235, 0.07);
+}
+
+/* ─────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────── */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─────────────────────────────────────────────
+   NATIVE SELECT
+───────────────────────────────────────────── */
+:root select { color-scheme: dark; }
+:root.light select { color-scheme: light; }
+select option {
+  background-color: var(--card-bg) !important;
+  color: var(--app-text) !important;
+}
+
+/* ─────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(128,128,128,0.2);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128,128,128,0.35);
+}
+
+/* ─────────────────────────────────────────────
+   FOCUS RING
+───────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────
+   SKELETON LOADER
+───────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ─────────────────────────────────────────────
+   PAGE TRANSITION
+───────────────────────────────────────────── */
+.page-enter {
+  animation: pageEnter 0.2s ease-out;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   SIDEBAR NAV ACTIVE GLOW LINE
+───────────────────────────────────────────── */
+.nav-active-glow {
+  position: relative;
+}
+.nav-active-glow::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 3px 3px 0;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE: header / nav icon button overrides
+   (Tailwind's white/N utilities stay white-based;
+    we need black/N equivalents in light mode)
+───────────────────────────────────────────── */
+:root.light header button {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+:root.light header button:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE: light color variants → readable dark equivalents
+   Tailwind's *-100/*-200/*-300/*-400 are too pale on white.
+   Remap to -700/-800 equivalents for readability.
+───────────────────────────────────────────── */
+
+/* -400 variants (nav active, stat badges) */
+:root.light .text-blue-400    { color: #1d4ed8 !important; }
+:root.light .text-indigo-400  { color: #4338ca !important; }
+:root.light .text-emerald-400 { color: #047857 !important; }
+:root.light .text-amber-400   { color: #b45309 !important; }
+:root.light .text-fuchsia-400 { color: #a21caf !important; }
+:root.light .text-purple-400  { color: #7e22ce !important; }
+:root.light .text-rose-400    { color: #be123c !important; }
+:root.light .text-sky-400     { color: #0369a1 !important; }
+:root.light .text-green-400   { color: #15803d !important; }
+:root.light .text-violet-400  { color: #6d28d9 !important; }
+:root.light .text-teal-400    { color: #0f766e !important; }
+:root.light .text-teal-300    { color: #0d6e63 !important; }
+
+/* -300 variants */
+:root.light .text-blue-300    { color: #1e40af !important; }
+:root.light .text-indigo-300  { color: #3730a3 !important; }
+:root.light .text-emerald-300 { color: #065f46 !important; }
+:root.light .text-amber-300   { color: #92400e !important; }
+:root.light .text-rose-300    { color: #9f1239 !important; }
+:root.light .text-sky-300     { color: #075985 !important; }
+:root.light .text-violet-300  { color: #5b21b6 !important; }
+
+/* -200 variants */
+:root.light .text-blue-200    { color: #1e3a8a !important; }
+:root.light .text-indigo-200  { color: #312e81 !important; }
+:root.light .text-emerald-200 { color: #064e3b !important; }
+:root.light .text-amber-200   { color: #78350f !important; }
+:root.light .text-rose-200    { color: #881337 !important; }
+:root.light .text-sky-200     { color: #0c4a6e !important; }
+:root.light .text-violet-200  { color: #4c1d95 !important; }
+:root.light .text-purple-200  { color: #581c87 !important; }
+
+/* -100 variants (near-white — completely invisible in light mode) */
+:root.light .text-blue-100    { color: #1e3a8a !important; }
+:root.light .text-indigo-100  { color: #312e81 !important; }
+:root.light .text-emerald-100 { color: #064e3b !important; }
+:root.light .text-amber-100   { color: #78350f !important; }
+:root.light .text-rose-100    { color: #881337 !important; }
+:root.light .text-sky-100     { color: #0c4a6e !important; }
+:root.light .text-violet-100  { color: #4c1d95 !important; }
+:root.light .text-purple-100  { color: #581c87 !important; }
+:root.light .text-green-100   { color: #14532d !important; }
+
+/* Misc */
+:root.light .text-slate-400   { color: #475569 !important; }
+
+/* ─────────────────────────────────────────────
+   LIGHT MODE: skeleton shimmer override
+───────────────────────────────────────────── */
+:root.light .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.04) 0%,
+    rgba(0,0,0,0.09) 50%,
+    rgba(0,0,0,0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────
+   GLASS CARD
+───────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+:root.light .glass {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ─────────────────────────────────────────────
+   STAT NUMBER FONT
+───────────────────────────────────────────── */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ─────────────────────────────────────────────
+   FULLCALENDAR CUSTOMIZATION
+───────────────────────────────────────────── */
+.fc {
+  --fc-border-color:          var(--card-border);
+  --fc-daygrid-event-dot-width: 7px;
+  --fc-list-event-dot-width:  7px;
+  --fc-neutral-bg-color:      var(--app-bg);
+  --fc-page-bg-color:         var(--card-bg);
+  --fc-today-bg-color:        var(--accent-soft);
+  color: var(--app-text);
+  font-family: 'Outfit', inherit;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: var(--app-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fc .fc-button {
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--app-text) !important;
+  font-family: 'Outfit', inherit !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+
+.fc .fc-button:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.fc .fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: white !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35) !important;
+}
+
+.fc th {
+  padding: 8px 0 !important;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-text-muted);
+  border-color: var(--card-border) !important;
+}
+
+.fc td { border-color: var(--card-border) !important; }
+.fc-theme-standard .fc-scrollgrid { border-color: var(--card-border) !important; }
+
+.fc-daygrid-day-number {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px !important;
+  color: var(--app-text-muted);
+}
+
+.fc-event {
+  cursor: pointer;
+  border: none !important;
+  background: transparent !important;
+  padding: 1px 2px !important;
+}
+
+.fc-h-event {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.fc-daygrid-event {
+  border-radius: 4px !important;
+  margin-top: 2px !important;
+}
+
+.fc .fc-list { border-color: var(--card-border); }
+
+.fc .fc-list-day-cushion {
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--app-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.fc .fc-list-event:hover td { background: var(--accent-soft); }
+
+/* ─────────────────────────────────────────────
+   RECHARTS TOOLTIP
+───────────────────────────────────────────── */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--shadow-md) !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 11px !important;
+}
+
+/* ─────────────────────────────────────────────
+   TABLE ROWS
+───────────────────────────────────────────── */
+.table-row-hover {
+  transition: background-color 0.15s ease;
+}
+.table-row-hover:hover {
+  background-color: rgba(59, 130, 246, 0.04);
+}
+
+/* ─────────────────────────────────────────────
+   BADGE / PILL BASE
+───────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid transparent;
+  line-height: 1.4;
+}
+
+/* ─────────────────────────────────────────────
+   AMBIENT BACKGROUND GRADIENT
+───────────────────────────────────────────── */
+.ambient-bg::before {
+  content: '';
+  position: fixed;
+  top: -30%;
+  left: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-bg::after {
+  content: '';
+  position: fixed;
+  bottom: -20%;
+  right: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}

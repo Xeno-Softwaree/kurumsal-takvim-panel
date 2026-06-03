@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <!-- Apply saved theme before React mounts to prevent flash -->
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('ktakvim-theme');
+          document.documentElement.classList.add(t === 'light' ? 'light' : 'dark');
+        } catch(e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Tuzla Belediyesi Afet İşleri ve Risk Yönetimi - Etkinlik Takip Sistemi" />
+    <meta name="theme-color" content="#0b0f1a" />
+    <title>Tuzla AFAD — Etkinlik Yönetim Sistemi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => console.log('SW registered: ', reg))
+            .catch((err) => console.log('SW registration failed: ', err));
+        });
+      }
+    </script>
+  </body>
+</html>
