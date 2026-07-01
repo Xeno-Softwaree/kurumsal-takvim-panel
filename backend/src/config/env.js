@@ -5,10 +5,16 @@ const ROOT_DIR = path.resolve(__dirname, '..', '..');
 
 dotenv.config({ path: path.join(ROOT_DIR, '.env') });
 
+if (!process.env.JWT_SECRET) {
+  console.error('❌ JWT_SECRET ortam değişkeni set edilmemiş. Uygulama başlamayı reddediyor.');
+  console.error('   Render → Environment → JWT_SECRET değerini gir ve yeniden deploy et.');
+  process.exit(1);
+}
+
 module.exports = {
   env: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 3000,
-  jwtSecret: process.env.JWT_SECRET || 'change_this_jwt_secret_in_env',
+  jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   databaseUrl: process.env.DATABASE_URL, // Must be set - no fallbacks
   frontendOrigin: process.env.FRONTEND_ORIGIN || 'https://tuzlabelafad.vercel.app',
@@ -25,6 +31,6 @@ module.exports = {
     fromName: process.env.SMTP_FROM_NAME || 'Takvim Takip',
   },
   defaultAdminEmail: process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com',
-  defaultAdminPassword: process.env.DEFAULT_ADMIN_PASSWORD || 'Admin123!',
+  defaultAdminPassword: process.env.DEFAULT_ADMIN_PASSWORD,
 };
 
