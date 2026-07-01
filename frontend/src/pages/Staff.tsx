@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Building2, Pencil, Plus, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 import { getDepartments, createDepartment, deleteDepartment, type DepartmentDto } from '../api/departments';
 import { getStaffList, getStaffMember, createStaff, updateStaff, deleteStaff, type StaffDto, type StaffDetailDto, type StaffInput } from '../api/staff';
 import { returnAssignment } from '../api/inventory';
@@ -23,12 +24,11 @@ type SelectValue = '' | 'volunteer' | string;
 export default function Staff() {
   const { token, admin } = useAuth();
   const isSuperAdmin = !!admin?.is_super_admin;
+  const { showSuccess, showError } = useToast();
 
   const [staffList, setStaffList] = useState<StaffDto[]>([]);
   const [departments, setDepartments] = useState<DepartmentDto[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   // Staff form modal state
   const [formOpen, setFormOpen] = useState(false);
@@ -62,13 +62,12 @@ export default function Staff() {
 
   const load = async () => {
     setLoading(true);
-    setError(null);
     try {
       const [sl, dl] = await Promise.all([getStaffList(), getDepartments()]);
       setStaffList(sl || []);
       setDepartments(dl || []);
     } catch (err) {
-      setError(extractError(err));
+      showError(extractError(err));
     } finally {
       setLoading(false);
     }
@@ -134,10 +133,10 @@ export default function Staff() {
     try {
       if (editTarget) {
         await updateStaff(editTarget.id, buildStaffInput());
-        setSuccess('Personel güncellendi');
+        showSuccess('Personel güncellendi');
       } else {
         await createStaff(buildStaffInput());
-        setSuccess('Personel eklendi');
+        showSuccess('Personel eklendi');
       }
       setFormOpen(false);
       await load();
@@ -152,14 +151,12 @@ export default function Staff() {
     // eslint-disable-next-line no-alert
     if (!window.confirm(`"${s.first_name} ${s.last_name}" adlı personeli silmek istediğinize emin misiniz?`)) return;
     setDeletingStaffId(s.id);
-    setError(null);
-    setSuccess(null);
     try {
       await deleteStaff(s.id);
-      setSuccess('Personel silindi');
+      showSuccess('Personel silindi');
       await load();
     } catch (err) {
-      setError(extractError(err));
+      showError(extractError(err));
     } finally {
       setDeletingStaffId(null);
     }
@@ -206,7 +203,7 @@ export default function Staff() {
       const detail = await getStaffMember(s.id);
       setZimmetTarget(detail);
     } catch (err) {
-      setError(extractError(err));
+      showError(extractError(err));
     } finally {
       setZimmetLoading(false);
     }
@@ -265,13 +262,6 @@ export default function Staff() {
           </div>
         )}
       </div>
-
-      {error && (
-        <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">{error}</div>
-      )}
-      {success && (
-        <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">{success}</div>
-      )}
 
       {/* Staff table */}
       <div className="overflow-hidden rounded-2xl border border-app-border bg-app-card shadow-sm backdrop-blur-[10px] transition">

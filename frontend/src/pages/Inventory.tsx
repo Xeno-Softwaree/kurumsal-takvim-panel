@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 import {
   getInventoryItems,
   createInventoryItem,
@@ -70,12 +71,11 @@ const inputCls = 'w-full rounded-lg px-3 py-2 text-sm bg-white/5 border border-w
 export default function Inventory() {
   const { admin } = useAuth();
   const isSuperAdmin = !!admin?.is_super_admin;
+  const { showSuccess, showError } = useToast();
 
   const [items, setItems] = useState<InventoryItemDto[]>([]);
   const [staffList, setStaffList] = useState<StaffDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
 
   // Add item modal
@@ -118,24 +118,18 @@ export default function Inventory() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const [data, staff] = await Promise.all([getInventoryItems(), getStaffList()]);
       setItems(data);
       setStaffList(staff.filter(s => s.status === 'active'));
     } catch (err) {
-      setError(extractError(err));
+      showError(extractError(err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => { load(); }, [load]);
-
-  function flash(msg: string) {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(''), 3000);
-  }
 
   function toggleCollapse(id: number) {
     setCollapsed(prev => {
@@ -153,8 +147,8 @@ export default function Inventory() {
   }
 
   async function handleAdd() {
-    if (!addName.trim()) return setError('Ürün adı zorunludur');
-    setAddLoading(true); setError('');
+    if (!addName.trim()) { showError('Ürün adı zorunludur'); return; }
+    setAddLoading(true);
     try {
       const variantPayload = addHasVariant
         ? addVariants.filter(v => v.label.trim()).map(v => ({ label: v.label.trim(), quantity: parseInt(v.quantity, 10) || 0 }))
@@ -162,9 +156,9 @@ export default function Inventory() {
 
       await createInventoryItem({ name: addName.trim(), category: addCategory.trim() || undefined, has_variant: addHasVariant, variants: variantPayload });
       setShowAdd(false);
-      flash('Ürün eklendi');
+      showSuccess('Ürün eklendi');
       await load();
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
     finally { setAddLoading(false); }
   }
 
@@ -174,26 +168,25 @@ export default function Inventory() {
   }
 
   async function handleEdit() {
-    if (!editItem || !editName.trim()) return setError('Ürün adı zorunludur');
-    setEditLoading(true); setError('');
+    if (!editItem || !editName.trim()) { showError('Ürün adı zorunludur'); return; }
+    setEditLoading(true);
     try {
       await updateInventoryItem(editItem.id, { name: editName.trim(), category: editCategory.trim() || undefined });
       setEditItem(null);
-      flash('Ürün güncellendi');
+      showSuccess('Ürün güncellendi');
       await load();
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
     finally { setEditLoading(false); }
   }
 
   // ── Delete item ───────────────────────────────────────────────────────────
   async function handleDelete(item: InventoryItemDto) {
     if (!confirm(`"${item.name}" silinsin mi?`)) return;
-    setError('');
     try {
       await deleteInventoryItem(item.id);
-      flash('Ürün silindi');
+      showSuccess('Ürün silindi');
       await load();
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
   }
 
   // ── Add variant ───────────────────────────────────────────────────────────
@@ -203,13 +196,13 @@ export default function Inventory() {
 
   async function handleAddVariant() {
     if (!variantItem) return;
-    setVariantLoading(true); setError('');
+    setVariantLoading(true);
     try {
       await addVariant(variantItem.id, { label: variantLabel.trim() || null, quantity: parseInt(variantQty, 10) || 0 });
       setVariantItem(null);
-      flash('Varyant eklendi');
+      showSuccess('Varyant eklendi');
       await load();
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
     finally { setVariantLoading(false); }
   }
 
@@ -221,15 +214,15 @@ export default function Inventory() {
   async function handleAdjust() {
     if (!adjustVariantRow) return;
     const d = parseInt(adjustDelta, 10);
-    if (Number.isNaN(d) || d === 0) return setError('Geçerli bir miktar girin');
-    if (!adjustReason.trim()) return setError('Sebep zorunludur');
-    setAdjustLoading(true); setError('');
+    if (Number.isNaN(d) || d === 0) { showError('Geçerli bir miktar girin'); return; }
+    if (!adjustReason.trim()) { showError('Sebep zorunludur'); return; }
+    setAdjustLoading(true);
     try {
       await adjustVariant(adjustVariantRow.variant.id, { delta: d, reason: adjustReason.trim() });
       setAdjustVariantRow(null);
-      flash('Stok güncellendi');
+      showSuccess('Stok güncellendi');
       await load();
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
     finally { setAdjustLoading(false); }
   }
 
@@ -239,22 +232,21 @@ export default function Inventory() {
     try {
       const data = await getVariantAssignments(variant.id);
       setAssignments(data);
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
     finally { setDetailLoading(false); }
   }
 
   async function handleReturn(assignmentId: number) {
     if (!confirm('İade al?')) return;
-    setError('');
     try {
       await returnAssignment(assignmentId);
-      flash('İade alındı');
+      showSuccess('İade alındı');
       if (detailVariant) {
         const data = await getVariantAssignments(detailVariant.variant.id);
         setAssignments(data);
       }
       await load();
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
   }
 
   // ── Assign ────────────────────────────────────────────────────────────────
@@ -264,16 +256,16 @@ export default function Inventory() {
 
   async function handleAssign() {
     if (!assignVariantRow) return;
-    if (!assignStaffId) return setError('Personel seçin');
+    if (!assignStaffId) { showError('Personel seçin'); return; }
     const qty = parseInt(assignQty, 10);
-    if (!qty || qty < 1) return setError('Adet en az 1 olmalıdır');
-    setAssignLoading(true); setError('');
+    if (!qty || qty < 1) { showError('Adet en az 1 olmalıdır'); return; }
+    setAssignLoading(true);
     try {
       await createAssignment({ variant_id: assignVariantRow.variant.id, staff_id: parseInt(assignStaffId, 10), quantity: qty, notes: assignNotes.trim() || undefined });
       setAssignVariantRow(null);
-      flash('Zimmet verildi');
+      showSuccess('Zimmet verildi');
       await load();
-    } catch (err) { setError(extractError(err)); }
+    } catch (err) { showError(extractError(err)); }
     finally { setAssignLoading(false); }
   }
 
@@ -299,9 +291,6 @@ export default function Inventory() {
           </button>
         )}
       </div>
-
-      {error && <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
-      {success && <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">{success}</div>}
 
       {loading ? (
         <div className="flex justify-center py-12 text-gray-400 text-sm">Yükleniyor…</div>

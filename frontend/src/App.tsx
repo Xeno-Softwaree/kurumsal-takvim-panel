@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import AdminLayout from './layout/AdminLayout';
+import { ToastProvider } from './components/Toast';
 import type { ReactElement } from 'react';
 
 // Eager load critical path
@@ -69,6 +70,7 @@ function PrivateRoute({ children }: { children: ReactElement }) {
 
 export default function App() {
   return (
+    <ToastProvider>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
@@ -152,5 +154,6 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </ToastProvider>
   );
 }
