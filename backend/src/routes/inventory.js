@@ -176,7 +176,7 @@ router.post('/variants/:id/adjust', requireSuperAdmin, async (req, res) => {
   const { delta, reason } = req.body;
   const d = parseInt(delta, 10);
   if (Number.isNaN(d) || d === 0) return res.status(400).json({ error: 'Geçerli bir miktar girin (sıfır olamaz)' });
-  if (!reason || !String(reason).trim()) return res.status(400).json({ error: 'Sebep zorunludur' });
+  const reasonStr = reason ? String(reason).trim() : null;
 
   try {
     // quantity + delta >= 0 guard is atomic — no race condition possible
@@ -190,7 +190,7 @@ router.post('/variants/:id/adjust', requireSuperAdmin, async (req, res) => {
       await run(
         'INSERT INTO activity_logs (admin_id, action, entity_type, entity_id, meta) VALUES ($1, $2, $3, $4, $5)',
         [req.admin.id, 'ADJUST_INVENTORY', 'inventory_variant', parseInt(id, 10),
-          JSON.stringify({ delta: d, reason: reason.trim(), new_quantity: updated.quantity })],
+          JSON.stringify({ delta: d, reason: reasonStr, new_quantity: updated.quantity })],
       );
     } catch (logErr) { console.warn('Activity log failed:', logErr?.message); }
 

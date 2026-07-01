@@ -215,10 +215,9 @@ export default function Inventory() {
     if (!adjustVariantRow) return;
     const d = parseInt(adjustDelta, 10);
     if (Number.isNaN(d) || d === 0) { showError('Geçerli bir miktar girin'); return; }
-    if (!adjustReason.trim()) { showError('Sebep zorunludur'); return; }
     setAdjustLoading(true);
     try {
-      await adjustVariant(adjustVariantRow.variant.id, { delta: d, reason: adjustReason.trim() });
+      await adjustVariant(adjustVariantRow.variant.id, { delta: d, reason: adjustReason.trim() || '' });
       setAdjustVariantRow(null);
       showSuccess('Stok güncellendi');
       await load();
@@ -488,8 +487,8 @@ export default function Inventory() {
           <Field label="Değişim Miktarı (+ ekle, − çıkar)">
             <input className={inputCls} type="number" value={adjustDelta} onChange={e => setAdjustDelta(e.target.value)} placeholder="+10 veya -5" />
           </Field>
-          <Field label="Sebep *">
-            <input className={inputCls} value={adjustReason} onChange={e => setAdjustReason(e.target.value)} placeholder="Yeni alım, kayıp, sayım düzeltme…" />
+          <Field label="Sebep">
+            <input className={inputCls} value={adjustReason} onChange={e => setAdjustReason(e.target.value)} placeholder="Opsiyonel — Yeni alım, kayıp, sayım düzeltme…" />
           </Field>
           <div className="flex gap-2 pt-1">
             <button onClick={() => setAdjustVariantRow(null)} className="flex-1 py-2 rounded-lg text-sm bg-white/5 hover:bg-white/10 transition-colors">İptal</button>

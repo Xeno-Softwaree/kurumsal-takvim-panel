@@ -58,7 +58,7 @@ export async function addVariant(itemId: number, data: { label: string | null; q
   return res.data;
 }
 
-export async function adjustVariant(variantId: number, data: { delta: number; reason: string }): Promise<{ quantity: number }> {
+export async function adjustVariant(variantId: number, data: { delta: number; reason?: string }): Promise<{ quantity: number }> {
   const res = await http.post<{ quantity: number }>(`/inventory/variants/${variantId}/adjust`, data);
   return res.data;
 }
