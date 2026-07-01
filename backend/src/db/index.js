@@ -191,6 +191,40 @@ async function initDatabase() {
     `);
     console.log('✅ notifications table ready');
 
+    // Create departments table
+    await run(`
+      CREATE TABLE IF NOT EXISTS departments (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ departments table ready');
+
+    // Create staff table
+    await run(`
+      CREATE TABLE IF NOT EXISTS staff (
+        id SERIAL PRIMARY KEY,
+        first_name VARCHAR(100) NOT NULL,
+        last_name VARCHAR(100) NOT NULL,
+        tc_no VARCHAR(11) UNIQUE,
+        birth_date DATE,
+        email VARCHAR(255),
+        phone VARCHAR(20),
+        department_id INTEGER REFERENCES departments(id),
+        is_volunteer BOOLEAN DEFAULT false,
+        status VARCHAR(20) DEFAULT 'active',
+        created_by_admin_id INTEGER REFERENCES admin_users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CHECK (
+          (department_id IS NOT NULL AND is_volunteer = false) OR
+          (department_id IS NULL AND is_volunteer = true)
+        )
+      )
+    `);
+    console.log('✅ staff table ready');
+
     // Create indexes for performance
     await run(`CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_events_is_active ON events(is_active)`);
@@ -209,6 +243,10 @@ async function initDatabase() {
     await run(`CREATE INDEX IF NOT EXISTS idx_events_label ON events(label)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_events_status ON events(status)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_events_dept ON events(department)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_staff_department_id ON staff(department_id)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_staff_status ON staff(status)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_staff_is_volunteer ON staff(is_volunteer)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_departments_name ON departments(name)`);
     console.log('✅ Database indexes ready');
 
     console.log('✅ Supabase PostgreSQL database initialized successfully');

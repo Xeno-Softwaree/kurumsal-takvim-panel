@@ -21,6 +21,8 @@ const settingsRoutes = require('./routes/settings');
 const notificationRoutes = require('./routes/notifications');
 const documentRoutes = require('./routes/documents');
 const reminderRoutes = require('./routes/reminders');
+const departmentRoutes = require('./routes/departments');
+const staffRoutes = require('./routes/staff');
 const { startScheduler } = require('./services/scheduler');
 const { validateSingleDatabaseConnection } = require('./utils/dbValidator');
 async function bootstrap() {
@@ -82,6 +84,8 @@ async function bootstrap() {
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/documents', documentRoutes);
   app.use('/api/reminders', reminderRoutes);
+  app.use('/api/departments', departmentRoutes);
+  app.use('/api/staff', staffRoutes);
 
   // Generic error handler
   app.use((err, req, res, next) => {

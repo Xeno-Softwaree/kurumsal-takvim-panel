@@ -28,14 +28,15 @@ backend/
     middleware/auth.js     → requireAuth, requireSuperAdmin (JWT tabanlı)
     middleware/validation.js → basit input validasyonu + XSS için tag stripping
     routes/*.js              → auth, events, documents, admins, mail, settings, stats,
-                               notifications (SSE dahil), reminders, activityLogs
+                               notifications (SSE dahil), reminders, activityLogs,
+                               departments, staff
     services/*.js             → mailer (Brevo API), scheduler (node-cron ile hatırlatma),
                                 sseManager (bildirim stream'i), notifications
 frontend/
   src/
     api/*.ts        → axios tabanlı backend client'ları (http.ts JWT'yi localStorage'dan okur)
     pages/*.tsx      → Dashboard, CalendarPage, ActiveEvents/PastEvents, Documents,
-                      AdminManagement, ActivityLogs, Reminders, Labels, MailSettings, Login
+                      AdminManagement, ActivityLogs, Reminders, Labels, MailSettings, Login, Staff
     components/*.tsx  → EventDrawer, Form, Card, PDF export bileşenleri
     auth/AuthContext.tsx → login/logout state
 ```
@@ -44,14 +45,12 @@ frontend/
 
 > Bunlar 2026-07-01 tarihli bir kod incelemesinden. Biri çözüldükçe buradan silinsin/işaretlensin.
 
-1. **[KISMI ÇÖZÜLDÜ - 2026-07-01] Gerçek DB kimlik bilgileri commit'lenmişti.**
+1. **[ÇÖZÜLDÜ - 2026-07-01] Gerçek DB kimlik bilgileri commit'lenmişti.**
    ✅ Supabase DB şifresi reset edildi (eski şifre artık geçersiz).
    ✅ Yeni `DATABASE_URL` Render env'e girildi.
    ✅ `backend/migrate-neon-to-supabase.js` temizlendi — artık env değişkenlerinden okuyor.
-   ⚠️ **KALAN — Git history:** Lokal klasör ZIP extract, git repo değil; BFG burada çalıştırılamaz.
-   GitHub'daki eski commit (`96e310ce`) hâlâ silinen credential'ı içeriyor. Şifre geçersiz
-   olduğu için anlık risk yok, ama secret scanning uyarısı açık kalır ve commit görünür durumda.
-   **Yapılacak:** Repoyu ayrı bir klasöre `git clone` et, BFG + `git push --force` uygula.
+   ✅ Git history `git filter-repo` ile temizlendi ve force-push edildi; tüm geçmişte
+      credential izleri kalmadığı iki kez bağımsız olarak doğrulandı.
 
 2. **[ÇÖZÜLDÜ - 2026-07-01] Zayıf default fallback'ler.**
    ✅ `JWT_SECRET` env yoksa `config/env.js` bootstrap'ta `process.exit(1)` yapar.
@@ -138,4 +137,13 @@ frontend/
 
 _Mami buraya ne ekleneceğini söyledikçe güncellenecek._
 
-- (henüz boş — ilk özellik isteği bekleniyor)
+- **[2026-07-01] Ekip / Personel sayfası eklendi.**
+  - Yeni tablolar: `departments` (birimler), `staff` (personel) — her ikisi hem `db/index.js` hem `backend/migrations/add_staff_departments.sql` içinde tanımlı.
+  - `staff` tablosunda `CHECK` kısıtı: `is_volunteer=true` ise `department_id` NULL olmalı, aksi durumda dolu olmalı.
+  - Backend: `GET/POST/PUT/DELETE /api/departments` ve `GET/POST/PUT/DELETE /api/staff` route'ları eklendi.
+  - TC Kimlik No validasyonu sunucu tarafında uygulandı (standart algoritma, `validation.js`'de `validateTcNo`).
+  - TC No listede her zaman maskeli (`123****89`), detay endpoint'inde süper admin tam görür.
+  - Düzenlemede TC no boş bırakılırsa mevcut değer korunur.
+  - Frontend: `pages/Staff.tsx` sayfası, `api/departments.ts` ve `api/staff.ts` client'ları eklendi.
+  - Sidebar'a "Ekip" (`UserCheck` ikonu) eklendi — tüm adminler görür.
+  - "Personel Ekle", "Düzenle", "Sil" butonları ve "Birimleri Yönet" modalı yalnızca `is_super_admin` için görünür.

@@ -62,9 +62,77 @@ function validateEvent(req, res, next) {
   return next();
 }
 
+// Standard Turkish national ID (TC Kimlik No) algorithm
+function validateTcNo(tc) {
+  if (!/^\d{11}$/.test(tc)) return false;
+  if (tc[0] === '0') return false;
+  const d = tc.split('').map(Number);
+  const d10 = ((d[0] + d[2] + d[4] + d[6] + d[8]) * 7 - (d[1] + d[3] + d[5] + d[7])) % 10;
+  if (d10 < 0 || d10 !== d[9]) return false;
+  const d11 = d.slice(0, 10).reduce((a, b) => a + b, 0) % 10;
+  return d11 === d[10];
+}
+
+function validateDepartment(req, res, next) {
+  const { name } = req.body || {};
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Birim adı zorunludur' });
+  }
+  req.body.name = sanitizeString(name);
+  return next();
+}
+
+function validateStaff(req, res, next) {
+  const { first_name, last_name, tc_no, email, phone, department_id, is_volunteer, status } = req.body || {};
+
+  if (!first_name || typeof first_name !== 'string' || !first_name.trim()) {
+    return res.status(400).json({ error: 'Ad zorunludur' });
+  }
+  if (!last_name || typeof last_name !== 'string' || !last_name.trim()) {
+    return res.status(400).json({ error: 'Soyad zorunludur' });
+  }
+
+  const tcRaw = tc_no !== undefined && tc_no !== null ? String(tc_no).trim() : '';
+  if (tcRaw && !validateTcNo(tcRaw)) {
+    return res.status(400).json({ error: 'Geçersiz TC kimlik numarası' });
+  }
+
+  if (email && !EMAIL_REGEX.test(email)) {
+    return res.status(400).json({ error: 'Geçerli bir e-posta girin' });
+  }
+
+  const isVol = is_volunteer === true || is_volunteer === 'true';
+  const deptId = department_id ? parseInt(department_id, 10) : null;
+
+  if (isVol && deptId) {
+    return res.status(400).json({ error: 'Gönüllü personel bir birime bağlanamaz' });
+  }
+  if (!isVol && !deptId) {
+    return res.status(400).json({ error: 'Birimi olmayan personel gönüllü olarak işaretlenmelidir' });
+  }
+
+  const cleanStatus = status || 'active';
+  if (!['active', 'inactive'].includes(cleanStatus)) {
+    return res.status(400).json({ error: 'Geçersiz durum değeri' });
+  }
+
+  req.body.first_name = sanitizeString(first_name);
+  req.body.last_name = sanitizeString(last_name);
+  req.body.tc_no = tcRaw || null;
+  req.body.email = email ? sanitizeString(email.toLowerCase()) : null;
+  req.body.phone = phone ? sanitizeString(phone) : null;
+  req.body.is_volunteer = isVol;
+  req.body.department_id = deptId;
+  req.body.status = cleanStatus;
+
+  return next();
+}
+
 module.exports = {
   sanitizeString,
   validateLogin,
   validateAdminCreate,
   validateEvent,
+  validateDepartment,
+  validateStaff,
 };

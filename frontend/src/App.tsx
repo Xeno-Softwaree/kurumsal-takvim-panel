@@ -19,6 +19,7 @@ const MailSettings    = lazy(() => import('./pages/MailSettings'));
 const Labels          = lazy(() => import('./pages/Labels'));
 const Notifications   = lazy(() => import('./pages/Notifications'));
 const Reminders       = lazy(() => import('./pages/Reminders'));
+const Staff           = lazy(() => import('./pages/Staff'));
 
 /* ── Page-level skeleton fallback ─────────────────── */
 function PageSkeleton() {
@@ -135,6 +136,11 @@ export default function App() {
         <Route path="reminders" element={
           <Suspense fallback={<PageSkeleton />}>
             <Reminders />
+          </Suspense>
+        } />
+        <Route path="staff" element={
+          <Suspense fallback={<PageSkeleton />}>
+            <Staff />
           </Suspense>
         } />
       </Route>

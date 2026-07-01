@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   Bell, CalendarCheck, CalendarClock, CalendarDays,
-  LayoutDashboard, LogOut, Moon, Search, Sun, Users, Activity,
+  LayoutDashboard, LogOut, Moon, Search, Sun, Users, UserCheck, Activity,
   Mail, Menu, Tag, X, FileText, Timer,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -74,6 +74,14 @@ const mainNav: NavItem[] = [
     activeText:   'text-purple-400',
     activeBg:     'bg-purple-500/[0.12]',
     activeBorder: 'border-l-purple-400',
+  },
+  {
+    to: '/staff', label: 'Ekip',
+    icon: <UserCheck className="h-[15px] w-[15px]" />,
+    color: 'cyan',
+    activeText:   'text-cyan-400',
+    activeBg:     'bg-cyan-500/[0.12]',
+    activeBorder: 'border-l-cyan-400',
   },
 ];
 
