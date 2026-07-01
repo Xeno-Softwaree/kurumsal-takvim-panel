@@ -68,7 +68,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inputCls = 'w-full rounded-lg px-3 py-2 text-sm bg-white/5 border border-white/10 focus:outline-none focus:border-blue-500 transition-colors';
 
 export default function Inventory() {
-  const { isSuperAdmin } = useAuth();
+  const { admin } = useAuth();
+  const isSuperAdmin = !!admin?.is_super_admin;
 
   const [items, setItems] = useState<InventoryItemDto[]>([]);
   const [staffList, setStaffList] = useState<StaffDto[]>([]);
