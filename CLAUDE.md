@@ -23,22 +23,26 @@ backend/
   src/
     server.js          → bootstrap, middleware, route mount
     config/env.js       → tüm env değişkenleri + (tehlikeli) fallback default'lar
-    db/index.js          → pg Pool + initDatabase (CREATE TABLE IF NOT EXISTS...)
+    db/index.js          → pg Pool + initDatabase (CREATE TABLE IF NOT EXISTS...) + runTransaction()
     db/seed.js            → ilk süper admin'i oluşturur (env'den, yoksa default)
     middleware/auth.js     → requireAuth, requireSuperAdmin (JWT tabanlı)
-    middleware/validation.js → basit input validasyonu + XSS için tag stripping
+    middleware/validation.js → basit input validasyonu + XSS için tag stripping + validateTcNo
     routes/*.js              → auth, events, documents, admins, mail, settings, stats,
                                notifications (SSE dahil), reminders, activityLogs,
-                               departments, staff
+                               departments, staff, inventory
     services/*.js             → mailer (Brevo API), scheduler (node-cron ile hatırlatma),
                                 sseManager (bildirim stream'i), notifications
 frontend/
   src/
     api/*.ts        → axios tabanlı backend client'ları (http.ts JWT'yi localStorage'dan okur)
+                      departments.ts, staff.ts, inventory.ts dahil
     pages/*.tsx      → Dashboard, CalendarPage, ActiveEvents/PastEvents, Documents,
-                      AdminManagement, ActivityLogs, Reminders, Labels, MailSettings, Login, Staff
-    components/*.tsx  → EventDrawer, Form, Card, PDF export bileşenleri
-    auth/AuthContext.tsx → login/logout state
+                      AdminManagement, ActivityLogs, Reminders, Labels, MailSettings, Login,
+                      Staff, Inventory
+    components/*.tsx  → EventDrawer, Form, Card, PDF export bileşenleri,
+                        Toast.tsx (useToast hook), ConfirmDialog.tsx (useConfirm hook)
+    auth/AuthContext.tsx → login/logout state; useAuth() → { admin, token, loading, login, logout }
+                           NOT isSuperAdmin — kullan: const isSuperAdmin = !!admin?.is_super_admin
 ```
 
 ## Bilinen sorunlar / teknik borç (öncelik sırasına yakın)
@@ -120,6 +124,15 @@ frontend/
   göre gün aralığı hesaplıyor.
 - Bildirimler SSE (`/api/notifications/stream`) ile anlık gönderiliyor, token hem header
   hem query param (`?token=`) ile kabul ediliyor (EventSource header gönderemediği için).
+- **Tema sistemi:** `index.css` CSS değişkenleri (`:root` koyu, `:root.light` açık).
+  Tailwind utility karşılıkları: `bg-app-base`, `bg-app-card`, `text-app-text`,
+  `text-app-muted`, `border-app-border`, `bg-app-accent-soft`. Yeni sayfalarda
+  `bg-white/5`, `text-gray-400` gibi sabit değerler KULLANMA — bunlar açık temada görünmez.
+- **Toast sistemi:** `useToast()` → `{ showSuccess, showError }`. `ToastProvider`
+  App.tsx'te tanımlı. Toast sağ üst köşede (`top-20 right-4`), 3.6s sonra kaybolur.
+- **Onay diyaloğu:** `useConfirm()` → `confirm(msg, opts?): Promise<boolean>`.
+  `ConfirmProvider` App.tsx'te tanımlı. Silme işlemleri için `{ variant: 'danger' }`,
+  diğerleri için `{ confirmLabel: 'İade Al' }` gibi kullan. `window.confirm` KULLANMA.
 
 ## Yeni özellik eklerken
 
@@ -136,6 +149,18 @@ frontend/
 ## Yenilik / değişiklik günlüğü
 
 _Mami buraya ne ekleneceğini söyledikçe güncellenecek._
+
+- **[2026-07-02] UI polish: Toast konumu + ConfirmDialog bileşeni.**
+  - `Toast.tsx` sağ üst köşeye taşındı (`top-20 right-4`), kontrast artırıldı
+    (`bg-emerald-900` / `bg-red-900`, tam opak, `shadow-2xl`, `min-w-[260px]`).
+    Çıkış animasyonu artık yukarı doğru (`-translate-y-2`).
+  - Yeni `components/ConfirmDialog.tsx`: `useConfirm()` hook'u — `window.confirm()`
+    yerine async + tema uyumlu onay diyaloğu. `variant:'danger'` → kırmızı "Sil"
+    butonu + uyarı ikonu; `variant:'default'` → mavi "Onayla"; `confirmLabel` ile
+    buton metni özelleştirilebilir.
+  - `App.tsx`'te `ConfirmProvider`, `ToastProvider` içine eklendi.
+  - 8 `window.confirm()` çağrısı `useConfirm()` ile değiştirildi:
+    AdminManagement, Staff (×3), Inventory (×2), ActiveEvents, PastEvents.
 
 - **[2026-07-02] Ekipman / Stok Yönetimi sayfası eklendi.**
   - Yeni tablolar: `inventory_items`, `inventory_variants`, `inventory_assignments` — `db/index.js` ve `backend/migrations/add_inventory.sql` içinde tanımlı.
