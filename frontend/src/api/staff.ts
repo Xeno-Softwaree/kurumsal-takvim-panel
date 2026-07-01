@@ -16,6 +16,21 @@ export type StaffDto = {
   updated_at: string;
 };
 
+export type StaffActiveAssignment = {
+  id: number;
+  quantity: number;
+  status: 'assigned';
+  assigned_at: string;
+  notes: string | null;
+  variant_id: number;
+  variant_label: string | null;
+  item_id: number;
+  item_name: string;
+  category: string | null;
+};
+
+export type StaffDetailDto = StaffDto & { active_assignments: StaffActiveAssignment[] };
+
 export type StaffInput = {
   first_name: string;
   last_name: string;
@@ -33,8 +48,8 @@ export async function getStaffList(): Promise<StaffDto[]> {
   return res.data;
 }
 
-export async function getStaffMember(id: number): Promise<StaffDto> {
-  const res = await http.get<StaffDto>(`/staff/${id}`);
+export async function getStaffMember(id: number): Promise<StaffDetailDto> {
+  const res = await http.get<StaffDetailDto>(`/staff/${id}`);
   return res.data;
 }
 

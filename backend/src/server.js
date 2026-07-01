@@ -23,6 +23,7 @@ const documentRoutes = require('./routes/documents');
 const reminderRoutes = require('./routes/reminders');
 const departmentRoutes = require('./routes/departments');
 const staffRoutes = require('./routes/staff');
+const inventoryRoutes = require('./routes/inventory');
 const { startScheduler } = require('./services/scheduler');
 const { validateSingleDatabaseConnection } = require('./utils/dbValidator');
 async function bootstrap() {
@@ -86,6 +87,7 @@ async function bootstrap() {
   app.use('/api/reminders', reminderRoutes);
   app.use('/api/departments', departmentRoutes);
   app.use('/api/staff', staffRoutes);
+  app.use('/api/inventory', inventoryRoutes);
 
   // Generic error handler
   app.use((err, req, res, next) => {

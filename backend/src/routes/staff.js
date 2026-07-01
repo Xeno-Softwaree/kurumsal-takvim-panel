@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/staff/:id — super admin sees full tc_no, others see masked
+// GET /api/staff/:id — super admin sees full tc_no, others see masked; includes active assignments
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -57,7 +57,20 @@ router.get('/:id', async (req, res) => {
       row.tc_no = maskTcNo(row.tc_no);
     }
 
-    return res.json(row);
+    // Active (non-returned) assignments for this staff member
+    const activeAssignments = await all(`
+      SELECT
+        ia.id, ia.quantity, ia.status, ia.assigned_at, ia.notes,
+        iv.id AS variant_id, iv.variant_label,
+        ii.id AS item_id, ii.name AS item_name, ii.category
+      FROM inventory_assignments ia
+      JOIN inventory_variants iv ON ia.variant_id = iv.id
+      JOIN inventory_items ii ON iv.item_id = ii.id
+      WHERE ia.staff_id = $1 AND ia.status = 'assigned'
+      ORDER BY ia.assigned_at DESC
+    `, [id]);
+
+    return res.json({ ...row, active_assignments: activeAssignments });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Personel bilgisi alınamadı' });

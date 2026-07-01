@@ -137,6 +137,16 @@ frontend/
 
 _Mami buraya ne ekleneceğini söyledikçe güncellenecek._
 
+- **[2026-07-02] Ekipman / Stok Yönetimi sayfası eklendi.**
+  - Yeni tablolar: `inventory_items`, `inventory_variants`, `inventory_assignments` — `db/index.js` ve `backend/migrations/add_inventory.sql` içinde tanımlı.
+  - Stok azaltma/iade işlemleri `runTransaction()` ile atomik — race condition riski yok.
+  - `runTransaction(callback)` yardımcı fonksiyonu `db/index.js`'e eklendi ve export edildi.
+  - Backend: `GET/POST/PUT/DELETE /api/inventory/items`, `POST /items/:id/variants`, `POST /variants/:id/adjust`, `GET /variants/:id/assignments`, `POST /assignments`, `PUT /assignments/:id/return`.
+  - `GET /api/staff/:id` artık `active_assignments` dizisi de döndürüyor (zimmetler).
+  - Frontend: `pages/Inventory.tsx` (accordion+5 modal), `api/inventory.ts` client'ı eklendi.
+  - Staff.tsx'e "Zimmetler" butonu eklendi — tüm adminler görür, "İade Al" yalnızca süper admin.
+  - Sidebar'a "Stok" (`Package` ikonu, turuncu) eklendi — tüm adminler görür.
+
 - **[2026-07-01] Ekip / Personel sayfası eklendi.**
   - Yeni tablolar: `departments` (birimler), `staff` (personel) — her ikisi hem `db/index.js` hem `backend/migrations/add_staff_departments.sql` içinde tanımlı.
   - `staff` tablosunda `CHECK` kısıtı: `is_volunteer=true` ise `department_id` NULL olmalı, aksi durumda dolu olmalı.

@@ -2,7 +2,8 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Building2, Pencil, Plus, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { getDepartments, createDepartment, deleteDepartment, type DepartmentDto } from '../api/departments';
-import { getStaffList, createStaff, updateStaff, deleteStaff, type StaffDto, type StaffInput } from '../api/staff';
+import { getStaffList, getStaffMember, createStaff, updateStaff, deleteStaff, type StaffDto, type StaffDetailDto, type StaffInput } from '../api/staff';
+import { returnAssignment } from '../api/inventory';
 
 function extractError(err: unknown): string {
   if (err && typeof err === 'object' && 'response' in err) {
@@ -52,6 +53,12 @@ export default function Staff() {
   const [deletingDeptId, setDeletingDeptId] = useState<number | null>(null);
 
   const [deletingStaffId, setDeletingStaffId] = useState<number | null>(null);
+
+  // Zimmetler modal
+  const [zimmetTarget, setZimmetTarget] = useState<StaffDetailDto | null>(null);
+  const [zimmetLoading, setZimmetLoading] = useState(false);
+  const [zimmetError, setZimmetError] = useState<string | null>(null);
+  const [returningId, setReturningId] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -191,7 +198,38 @@ export default function Staff() {
     }
   };
 
-  const colSpan = isSuperAdmin ? 8 : 7;
+  const openZimmet = async (s: StaffDto) => {
+    setZimmetLoading(true);
+    setZimmetError(null);
+    setZimmetTarget(null);
+    try {
+      const detail = await getStaffMember(s.id);
+      setZimmetTarget(detail);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setZimmetLoading(false);
+    }
+  };
+
+  const handleReturn = async (assignmentId: number) => {
+    if (!zimmetTarget) return;
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Bu zimmeti iade almak istiyor musunuz?')) return;
+    setReturningId(assignmentId);
+    setZimmetError(null);
+    try {
+      await returnAssignment(assignmentId);
+      const detail = await getStaffMember(zimmetTarget.id);
+      setZimmetTarget(detail);
+    } catch (err) {
+      setZimmetError(extractError(err));
+    } finally {
+      setReturningId(null);
+    }
+  };
+
+  const colSpan = isSuperAdmin ? 9 : 8;
 
   return (
     <div className="space-y-4">
@@ -248,6 +286,7 @@ export default function Staff() {
                 <th className="px-4 py-3 text-left">Telefon</th>
                 <th className="px-4 py-3 text-left">Birim</th>
                 <th className="px-4 py-3 text-left">Durum</th>
+                <th className="px-4 py-3 text-left">Zimmetler</th>
                 {isSuperAdmin && <th className="px-4 py-3 text-right">İşlemler</th>}
               </tr>
             </thead>
@@ -289,6 +328,15 @@ export default function Staff() {
                           Pasif
                         </span>
                       )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <button
+                        type="button"
+                        onClick={() => openZimmet(s)}
+                        className="inline-flex items-center gap-1 rounded-md border border-cyan-500/40 bg-cyan-500/10 px-2 py-1 text-[10px] font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+                      >
+                        Zimmetler
+                      </button>
                     </td>
                     {isSuperAdmin && (
                       <td className="px-4 py-2.5">
@@ -458,6 +506,64 @@ export default function Staff() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Zimmetler modal — visible to all admins; return button only for super admins */}
+      {(zimmetTarget || zimmetLoading) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-lg overflow-hidden rounded-2xl border shadow-2xl animate-slide-up"
+            style={{ background: 'var(--card-bg)', borderColor: 'var(--border-strong)' }}
+          >
+            <div className="flex items-center justify-between border-b border-app-border px-5 py-4">
+              <h3 className="text-sm font-semibold text-app-text">
+                {zimmetTarget ? `${zimmetTarget.first_name} ${zimmetTarget.last_name} — Zimmetler` : 'Yükleniyor…'}
+              </h3>
+              <button type="button" onClick={() => setZimmetTarget(null)} className="text-app-muted transition hover:text-app-text">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              {zimmetLoading ? (
+                <p className="text-xs text-app-muted text-center py-4">Yükleniyor…</p>
+              ) : zimmetTarget?.active_assignments.length === 0 ? (
+                <p className="text-xs text-app-muted text-center py-4">Aktif zimmet kaydı yok.</p>
+              ) : (
+                <ul className="max-h-72 space-y-2 overflow-y-auto">
+                  {zimmetTarget?.active_assignments.map((a) => (
+                    <li key={a.id} className="flex items-center justify-between rounded-lg border border-app-border bg-app-base px-3 py-2 text-xs">
+                      <div>
+                        <p className="font-medium text-app-text">{a.item_name}{a.variant_label ? ` / ${a.variant_label}` : ''}</p>
+                        <p className="text-app-muted">{a.quantity} adet · {formatDate(a.assigned_at)}</p>
+                        {a.notes && <p className="text-app-muted mt-0.5">{a.notes}</p>}
+                      </div>
+                      {isSuperAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => handleReturn(a.id)}
+                          disabled={returningId === a.id}
+                          className="inline-flex items-center gap-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-300 transition hover:bg-emerald-500/20 disabled:opacity-60"
+                        >
+                          İade Al
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {zimmetError && (
+                <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">{zimmetError}</div>
+              )}
+              <button
+                type="button"
+                onClick={() => setZimmetTarget(null)}
+                className="w-full rounded-lg border border-app-border bg-app-base px-4 py-2 text-xs font-semibold text-app-text transition hover:bg-app-accent-soft"
+              >
+                Kapat
+              </button>
+            </div>
           </div>
         </div>
       )}

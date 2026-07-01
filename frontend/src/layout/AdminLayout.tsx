@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   Bell, CalendarCheck, CalendarClock, CalendarDays,
   LayoutDashboard, LogOut, Moon, Search, Sun, Users, UserCheck, Activity,
-  Mail, Menu, Tag, X, FileText, Timer,
+  Mail, Menu, Tag, X, FileText, Timer, Package,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -82,6 +82,14 @@ const mainNav: NavItem[] = [
     activeText:   'text-cyan-400',
     activeBg:     'bg-cyan-500/[0.12]',
     activeBorder: 'border-l-cyan-400',
+  },
+  {
+    to: '/inventory', label: 'Stok',
+    icon: <Package className="h-[15px] w-[15px]" />,
+    color: 'orange',
+    activeText:   'text-orange-400',
+    activeBg:     'bg-orange-500/[0.12]',
+    activeBorder: 'border-l-orange-400',
   },
 ];
 
