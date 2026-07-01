@@ -67,8 +67,9 @@ function validateTcNo(tc) {
   if (!/^\d{11}$/.test(tc)) return false;
   if (tc[0] === '0') return false;
   const d = tc.split('').map(Number);
-  const d10 = ((d[0] + d[2] + d[4] + d[6] + d[8]) * 7 - (d[1] + d[3] + d[5] + d[7])) % 10;
-  if (d10 < 0 || d10 !== d[9]) return false;
+  let d10 = ((d[0] + d[2] + d[4] + d[6] + d[8]) * 7 - (d[1] + d[3] + d[5] + d[7])) % 10;
+  if (d10 < 0) d10 += 10;
+  if (d10 !== d[9]) return false;
   const d11 = d.slice(0, 10).reduce((a, b) => a + b, 0) % 10;
   return d11 === d[10];
 }
