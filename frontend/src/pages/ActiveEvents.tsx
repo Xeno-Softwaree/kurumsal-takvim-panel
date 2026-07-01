@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../components/ConfirmDialog';
 import {
   CalendarCheck, FileDown, FileSpreadsheet, Pencil, Trash2,
   Users, Wifi, WifiOff, CheckSquare, Square, Loader2, X,
@@ -16,6 +17,7 @@ export default function ActiveEvents() {
   const navigate = useNavigate();
   const { labelsByName } = useLabels();
   const { isOnline, lastSync, saveToOffline, getOfflineData } = useOfflineSupport();
+  const { confirm } = useConfirm();
   const [events, setEvents] = useState<EventDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<string>('');
@@ -368,8 +370,7 @@ export default function ActiveEvents() {
                       <button
                         type="button"
                         onClick={async () => {
-                          // eslint-disable-next-line no-alert
-                          if (!window.confirm('Bu etkinliği silmek istediğinize emin misiniz?')) return;
+                          if (!await confirm('Bu etkinliği silmek istediğinize emin misiniz?', { variant: 'danger' })) return;
                           try {
                             await cancelEvent(ev.id);
                             setEvents(prev => prev.filter(x => x.id !== ev.id));

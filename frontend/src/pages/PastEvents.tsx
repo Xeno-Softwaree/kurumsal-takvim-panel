@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../components/ConfirmDialog';
 import {
   CalendarClock, FileDown, FileSpreadsheet, Pencil, Trash2,
   Users, CheckSquare, Square, Loader2, X,
@@ -14,6 +15,7 @@ import { Select } from '../components/Form';
 export default function PastEvents() {
   const navigate = useNavigate();
   const { labelsByName } = useLabels();
+  const { confirm } = useConfirm();
   const [events, setEvents] = useState<EventDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState<string>('');
@@ -338,8 +340,7 @@ export default function PastEvents() {
                       <button
                         type="button"
                         onClick={async () => {
-                          // eslint-disable-next-line no-alert
-                          if (!window.confirm('Bu etkinliği silmek istediğinize emin misiniz?')) return;
+                          if (!await confirm('Bu etkinliği silmek istediğinize emin misiniz?', { variant: 'danger' })) return;
                           try {
                             await cancelEvent(ev.id);
                             setEvents(prev => prev.filter(x => x.id !== ev.id));

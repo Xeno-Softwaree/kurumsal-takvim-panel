@@ -3,6 +3,7 @@ import { Filter, ShieldCheck, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { createAdmin, deleteAdmin, getAdmins } from '../api/admins';
+import { useConfirm } from '../components/ConfirmDialog';
 
 type Admin = {
   id: number;
@@ -14,6 +15,7 @@ type Admin = {
 export default function AdminManagement() {
   const { token, admin: currentAdmin } = useAuth();
   const navigate = useNavigate();
+  const { confirm } = useConfirm();
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,10 +30,7 @@ export default function AdminManagement() {
 
   const handleDelete = async (id: number) => {
     if (!token) return;
-    // eslint-disable-next-line no-alert
-    const ok = window.confirm(
-      'Bu admini silmek istediğinize emin misiniz?',
-    );
+    const ok = await confirm('Bu admini silmek istediğinize emin misiniz?', { variant: 'danger' });
     if (!ok) return;
 
     setError(null);

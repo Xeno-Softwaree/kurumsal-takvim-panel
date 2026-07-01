@@ -48,29 +48,29 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showSuccess, showError }}>
       {children}
       {createPortal(
-        <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <div className="fixed top-20 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
           {toasts.map(t => (
             <div
               key={t.id}
               style={{ transition: 'opacity 0.35s ease, transform 0.35s ease' }}
               className={[
-                'pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-xl border max-w-sm',
-                t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+                'pointer-events-auto flex items-center gap-3 px-4 py-3.5 rounded-xl shadow-2xl border min-w-[260px] max-w-sm',
+                t.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2',
                 t.type === 'success'
-                  ? 'bg-emerald-950/95 border-emerald-500/40 text-emerald-100'
-                  : 'bg-red-950/95 border-red-500/40 text-red-100',
+                  ? 'bg-emerald-900 border-emerald-400/60 text-emerald-50'
+                  : 'bg-red-900 border-red-400/60 text-red-50',
               ].join(' ')}
             >
               {t.type === 'success'
-                ? <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-emerald-400" />
-                : <XCircle    className="h-4 w-4 mt-0.5 shrink-0 text-red-400" />}
-              <p className="text-sm flex-1 leading-snug">{t.message}</p>
+                ? <CheckCircle className="h-4.5 w-4.5 shrink-0 text-emerald-300" />
+                : <XCircle    className="h-4.5 w-4.5 shrink-0 text-red-300" />}
+              <p className="text-sm font-medium flex-1 leading-snug">{t.message}</p>
               <button
                 onClick={() => dismiss(t.id)}
-                className="shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors"
+                className="shrink-0 p-0.5 rounded hover:bg-black/20 transition-colors opacity-70 hover:opacity-100"
                 aria-label="Kapat"
               >
-                <X className="h-3.5 w-3.5 opacity-60" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}

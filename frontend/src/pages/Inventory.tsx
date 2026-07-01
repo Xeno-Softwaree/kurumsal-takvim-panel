@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
+import { useConfirm } from '../components/ConfirmDialog';
 import {
   getInventoryItems,
   createInventoryItem,
@@ -80,6 +81,7 @@ export default function Inventory() {
   const { admin } = useAuth();
   const isSuperAdmin = !!admin?.is_super_admin;
   const { showSuccess, showError } = useToast();
+  const { confirm } = useConfirm();
 
   const [items, setItems] = useState<InventoryItemDto[]>([]);
   const [staffList, setStaffList] = useState<StaffDto[]>([]);
@@ -188,7 +190,7 @@ export default function Inventory() {
 
   // ── Delete item ───────────────────────────────────────────────────────────
   async function handleDelete(item: InventoryItemDto) {
-    if (!confirm(`"${item.name}" silinsin mi?`)) return;
+    if (!await confirm(`"${item.name}" silinsin mi?`, { variant: 'danger' })) return;
     try {
       await deleteInventoryItem(item.id);
       showSuccess('Ürün silindi');
@@ -243,7 +245,7 @@ export default function Inventory() {
   }
 
   async function handleReturn(assignmentId: number) {
-    if (!confirm('İade al?')) return;
+    if (!await confirm('İade al?', { title: 'İade Onayı', confirmLabel: 'İade Al' })) return;
     try {
       await returnAssignment(assignmentId);
       showSuccess('İade alındı');

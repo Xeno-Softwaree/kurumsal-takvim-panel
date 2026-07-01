@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Building2, Pencil, Plus, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
+import { useConfirm } from '../components/ConfirmDialog';
 import { getDepartments, createDepartment, deleteDepartment, type DepartmentDto } from '../api/departments';
 import { getStaffList, getStaffMember, createStaff, updateStaff, deleteStaff, type StaffDto, type StaffDetailDto, type StaffInput } from '../api/staff';
 import { returnAssignment } from '../api/inventory';
@@ -25,6 +26,7 @@ export default function Staff() {
   const { token, admin } = useAuth();
   const isSuperAdmin = !!admin?.is_super_admin;
   const { showSuccess, showError } = useToast();
+  const { confirm } = useConfirm();
 
   const [staffList, setStaffList] = useState<StaffDto[]>([]);
   const [departments, setDepartments] = useState<DepartmentDto[]>([]);
@@ -148,8 +150,7 @@ export default function Staff() {
   };
 
   const handleDelete = async (s: StaffDto) => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm(`"${s.first_name} ${s.last_name}" adlı personeli silmek istediğinize emin misiniz?`)) return;
+    if (!await confirm(`"${s.first_name} ${s.last_name}" adlı personeli silmek istediğinize emin misiniz?`, { variant: 'danger' })) return;
     setDeletingStaffId(s.id);
     try {
       await deleteStaff(s.id);
@@ -180,8 +181,7 @@ export default function Staff() {
   };
 
   const handleDeleteDept = async (id: number) => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm('Bu birimi silmek istediğinize emin misiniz?')) return;
+    if (!await confirm('Bu birimi silmek istediğinize emin misiniz?', { variant: 'danger' })) return;
     setDeletingDeptId(id);
     setDeptError(null);
     try {
@@ -211,8 +211,7 @@ export default function Staff() {
 
   const handleReturn = async (assignmentId: number) => {
     if (!zimmetTarget) return;
-    // eslint-disable-next-line no-alert
-    if (!window.confirm('Bu zimmeti iade almak istiyor musunuz?')) return;
+    if (!await confirm('Bu zimmeti iade almak istiyor musunuz?', { confirmLabel: 'İade Al' })) return;
     setReturningId(assignmentId);
     setZimmetError(null);
     try {
