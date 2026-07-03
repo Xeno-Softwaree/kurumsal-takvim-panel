@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import LogoIntro from '../components/LogoIntro';
 
 export default function Login() {
   const { login, loading } = useAuth();
@@ -55,28 +56,7 @@ export default function Login() {
 
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-4 text-center">
-          <div className="relative">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl"
-              style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}
-            >
-              <img
-                src="/logo.png"
-                alt="Tuzla Belediyesi"
-                className="h-10 w-10 object-contain"
-                onError={(e) => {
-                  const el = e.target as HTMLImageElement;
-                  el.style.display = 'none';
-                  (el.parentElement as HTMLElement).innerHTML = '<span class="text-2xl font-800 text-blue-400">T</span>';
-                }}
-              />
-            </div>
-            {/* Glow ring */}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-2xl opacity-40 animate-pulse-subtle"
-              style={{ boxShadow: '0 0 20px rgba(59,130,246,0.3)' }}
-            />
-          </div>
+          <LogoIntro />
           <div>
             <h1 className="text-[22px] font-800 leading-tight" style={{ color: 'var(--app-text)' }}>
               Tuzla Belediyesi
