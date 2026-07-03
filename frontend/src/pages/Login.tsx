@@ -48,17 +48,17 @@ export default function Login() {
             <div
               className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
               style={{
-                width: 200,
-                height: 200,
+                width: 260,
+                height: 260,
                 background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 68%)',
               }}
             />
           <div
-            className="relative flex h-[96px] w-[96px] items-center justify-center rounded-full"
+            className="relative flex h-[130px] w-[130px] items-center justify-center rounded-full"
             style={{ border: '1.5px solid var(--border-strong)' }}
           >
             <div
-              className="flex h-[76px] w-[76px] items-center justify-center rounded-full"
+              className="flex h-[108px] w-[108px] items-center justify-center rounded-full"
               style={{
                 background: 'var(--card-bg)',
                 border: '1px solid var(--card-border)',
@@ -67,7 +67,7 @@ export default function Login() {
               <img
                 src="/logo.png"
                 alt="Logo"
-                className="h-12 w-12 object-contain"
+                className="h-20 w-20 object-contain"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement!;
