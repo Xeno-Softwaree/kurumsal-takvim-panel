@@ -111,15 +111,15 @@ router.delete('/items/:id', requireSuperAdmin, async (req, res) => {
     const item = await get('SELECT id, name FROM inventory_items WHERE id = $1', [id]);
     if (!item) return res.status(404).json({ error: 'Ürün bulunamadı' });
 
-    // Audit trail: items with any assignment history (including returned) cannot be deleted
-    const hasAssignments = await get(`
+    // Block deletion only if there are active (not yet returned) assignments
+    const hasActiveAssignments = await get(`
       SELECT 1 FROM inventory_assignments ia
       JOIN inventory_variants v ON ia.variant_id = v.id
-      WHERE v.item_id = $1
+      WHERE v.item_id = $1 AND ia.status = 'assigned'
       LIMIT 1
     `, [id]);
-    if (hasAssignments) {
-      return res.status(400).json({ error: 'Bu ürünün zimmet geçmişi var, silinemez' });
+    if (hasActiveAssignments) {
+      return res.status(400).json({ error: 'Bu ürüne ait aktif zimmet var, önce iade alınmalı' });
     }
 
     await run('DELETE FROM inventory_items WHERE id = $1', [id]);
