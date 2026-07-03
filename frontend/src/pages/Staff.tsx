@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Building2, Landmark, Pencil, Plus, Trash2, Users, X } from 'lucide-react';
+import { Building2, Landmark, Pencil, Plus, Search, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -71,6 +71,10 @@ export default function Staff() {
   const [zimmetLoading, setZimmetLoading] = useState(false);
   const [zimmetError, setZimmetError] = useState<string | null>(null);
   const [returningId, setReturningId] = useState<number | null>(null);
+
+  // Search + filter
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
 
   const load = async () => {
     setLoading(true);
@@ -272,18 +276,50 @@ export default function Staff() {
     }
   };
 
-  const colSpan = isSuperAdmin ? 10 : 9;
+  // Computed stats
+  const statAktif      = staffList.filter(s => s.status === 'active' && !s.is_volunteer).length;
+  const statGonullu    = staffList.filter(s => s.is_volunteer).length;
+  const statMudurluklu = staffList.filter(s => s.directorate_id !== null).length;
+  const statPasif      = staffList.filter(s => s.status === 'inactive').length;
+
+  // Filter options (dynamic from departments + directorates)
+  const filterOptions = [
+    { key: 'all', label: 'Tümü' },
+    ...departments.map(d => ({ key: `dept-${d.id}`, label: d.name })),
+    ...directorates.map(d => ({ key: `dir-${d.id}`, label: d.name })),
+  ];
+
+  const filteredList = staffList.filter(s => {
+    const q = search.trim().toLowerCase();
+    if (q && !`${s.first_name} ${s.last_name}`.toLowerCase().includes(q)) return false;
+    if (activeFilter === 'all') return true;
+    if (activeFilter.startsWith('dept-')) return s.department_id === parseInt(activeFilter.slice(5), 10);
+    if (activeFilter.startsWith('dir-')) return s.directorate_id === parseInt(activeFilter.slice(4), 10);
+    return true;
+  });
+
+  const AVATAR_COLORS = [
+    'bg-indigo-500/20 text-indigo-400',
+    'bg-emerald-500/20 text-emerald-400',
+    'bg-amber-500/20 text-amber-400',
+    'bg-rose-500/20 text-rose-400',
+    'bg-sky-500/20 text-sky-400',
+    'bg-violet-500/20 text-violet-400',
+  ];
+
+  // 8 base cols + 1 if super admin (e-posta & telefon merged into İletişim)
+  const colSpan = isSuperAdmin ? 9 : 8;
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-app-accent-soft text-app-text shadow-sm ring-1 ring-app-border">
-            <Users className="h-4 w-4" />
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-app-accent-soft ring-1 ring-app-border">
+            <Users className="h-5 w-5 text-app-text" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-app-text">Ekip / Personel</h2>
+            <h2 className="text-base font-bold text-app-text">Ekip / Personel</h2>
             <p className="text-xs text-app-muted">TC kimlik numaraları listede maskelidir</p>
           </div>
         </div>
@@ -308,7 +344,7 @@ export default function Staff() {
             <button
               type="button"
               onClick={openAdd}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 px-3 py-1.5 text-xs font-semibold text-slate-50 shadow-sm transition hover:bg-indigo-400"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-400"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Personel Ekle</span>
@@ -317,98 +353,160 @@ export default function Staff() {
         )}
       </div>
 
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'AKTİF',     value: statAktif,      unit: 'personel', dot: 'bg-emerald-400' },
+          { label: 'GÖNÜLLÜ',   value: statGonullu,    unit: 'kişi',     dot: 'bg-amber-400'   },
+          { label: 'MÜDÜRLÜK',  value: statMudurluklu, unit: 'personel', dot: 'bg-blue-400'    },
+          { label: 'PASİF',     value: statPasif,      unit: 'personel', dot: 'bg-slate-400'   },
+        ].map(({ label, value, unit, dot }) => (
+          <div key={label} className="rounded-xl border border-app-border bg-app-card px-4 py-3">
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-app-muted">{label}</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="stat-number text-2xl font-bold text-app-text">{value}</span>
+              <span className="text-xs text-app-muted">{unit}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Search + filter chips */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative max-w-xs flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-app-muted" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Ad veya soyad ara…"
+            className="w-full rounded-lg border border-app-border bg-app-base py-2 pl-8 pr-3 text-xs text-app-text outline-none transition placeholder:text-app-muted focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30"
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setActiveFilter(opt.key)}
+              className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                activeFilter === opt.key
+                  ? 'border-blue-500 bg-blue-500 text-white'
+                  : 'border-app-border bg-app-base text-app-muted hover:bg-app-accent-soft'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Staff table */}
-      <div className="overflow-hidden rounded-2xl border border-app-border bg-app-card shadow-sm backdrop-blur-[10px] transition">
+      <div className="overflow-hidden rounded-2xl border border-app-border bg-app-card shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-app-border bg-app-base text-[11px] font-semibold text-app-muted">
-                <th className="px-4 py-3 text-left">Ad Soyad</th>
-                <th className="px-4 py-3 text-left">TC Kimlik</th>
-                <th className="px-4 py-3 text-left">Doğum Tarihi</th>
-                <th className="px-4 py-3 text-left">E-posta</th>
-                <th className="px-4 py-3 text-left">Telefon</th>
-                <th className="px-4 py-3 text-left">Birim</th>
-                <th className="px-4 py-3 text-left">Müdürlük</th>
-                <th className="px-4 py-3 text-left">Durum</th>
-                <th className="px-4 py-3 text-left">Zimmetler</th>
-                {isSuperAdmin && <th className="px-4 py-3 text-right">İşlemler</th>}
+              <tr className="border-b border-app-border bg-app-base">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Personel</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">TC Kimlik</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Doğum</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">İletişim</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Birim</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Müdürlük</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Durum</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Zimmetler</th>
+                {isSuperAdmin && <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-app-muted">İşlemler</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-app-border">
               {loading ? (
-                <tr>
-                  <td colSpan={colSpan} className="px-4 py-8 text-center text-app-muted">Yükleniyor…</td>
-                </tr>
-              ) : staffList.length === 0 ? (
+                <tr><td colSpan={colSpan} className="px-4 py-8 text-center text-app-muted">Yükleniyor…</td></tr>
+              ) : filteredList.length === 0 ? (
                 <tr>
                   <td colSpan={colSpan} className="px-4 py-8 text-center italic text-app-muted">
-                    Kayıtlı personel bulunamadı.
+                    {search || activeFilter !== 'all' ? 'Arama kriterine uyan personel bulunamadı.' : 'Kayıtlı personel bulunamadı.'}
                   </td>
                 </tr>
               ) : (
-                staffList.map((s) => (
-                  <tr key={s.id} className="transition hover:bg-white/[0.02]">
-                    <td className="px-4 py-2.5 font-medium text-app-text">{s.first_name} {s.last_name}</td>
-                    <td className="px-4 py-2.5 font-mono text-app-muted">{s.tc_no ?? '—'}</td>
-                    <td className="px-4 py-2.5 text-app-muted">{formatDate(s.birth_date)}</td>
-                    <td className="px-4 py-2.5 text-app-muted">{s.email ?? '—'}</td>
-                    <td className="px-4 py-2.5 text-app-muted">{s.phone ?? '—'}</td>
-                    <td className="px-4 py-2.5">
-                      {s.is_volunteer ? (
-                        <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
-                          Gönüllü
-                        </span>
-                      ) : (
-                        <span className="text-app-text">{s.department_name ?? '—'}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-app-muted">{s.directorate_name ?? '—'}</td>
-                    <td className="px-4 py-2.5">
-                      {s.status === 'active' ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                          Aktif
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-slate-500/20 px-2 py-0.5 text-[10px] font-semibold text-slate-400">
-                          Pasif
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <button
-                        type="button"
-                        onClick={() => openZimmet(s)}
-                        className="inline-flex items-center gap-1 rounded-md border border-cyan-500/40 bg-cyan-500/10 px-2 py-1 text-[10px] font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-                      >
-                        Zimmetler
-                      </button>
-                    </td>
-                    {isSuperAdmin && (
+                filteredList.map((s) => {
+                  const avatarCls = AVATAR_COLORS[s.id % AVATAR_COLORS.length];
+                  const initials = `${s.first_name[0] ?? ''}${s.last_name[0] ?? ''}`.toUpperCase();
+                  return (
+                    <tr key={s.id} className="table-row-hover">
                       <td className="px-4 py-2.5">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(s)}
-                            className="inline-flex items-center gap-1 rounded-md border border-indigo-500/40 bg-indigo-500/10 px-2 py-1 text-[10px] font-medium text-indigo-300 transition hover:bg-indigo-500/20"
-                          >
-                            <Pencil className="h-3 w-3" />
-                            Düzenle
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(s)}
-                            disabled={deletingStaffId === s.id}
-                            className="inline-flex items-center gap-1 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-[10px] font-medium text-rose-300 transition hover:bg-rose-500/20 disabled:opacity-60"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            Sil
-                          </button>
+                        <div className="flex items-center gap-2.5">
+                          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${avatarCls}`}>
+                            {initials}
+                          </div>
+                          <span className="font-medium text-app-text">{s.first_name} {s.last_name}</span>
                         </div>
                       </td>
-                    )}
-                  </tr>
-                ))
+                      <td className="px-4 py-2.5 font-mono text-app-muted">{s.tc_no ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-app-muted">{formatDate(s.birth_date)}</td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-col gap-0.5">
+                          {s.email ? <span className="text-app-muted">{s.email}</span> : null}
+                          {s.phone ? <span className="text-app-muted">{s.phone}</span> : null}
+                          {!s.email && !s.phone ? <span className="text-app-muted">—</span> : null}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {s.is_volunteer ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+                            Gönüllü
+                          </span>
+                        ) : (
+                          <span className="text-app-text">{s.department_name ?? '—'}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-app-muted">{s.directorate_name ?? '—'}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          s.status === 'active'
+                            ? 'bg-emerald-500/15 text-emerald-400'
+                            : 'bg-slate-500/20 text-slate-400'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${s.status === 'active' ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+                          {s.status === 'active' ? 'Aktif' : 'Pasif'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <button
+                          type="button"
+                          onClick={() => openZimmet(s)}
+                          className="inline-flex items-center rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-0.5 text-[10px] font-medium text-cyan-400 transition hover:bg-cyan-500/20"
+                        >
+                          Zimmetler
+                        </button>
+                      </td>
+                      {isSuperAdmin && (
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openEdit(s)}
+                              className="inline-flex items-center gap-1 rounded-md border border-violet-500/40 bg-violet-500/10 px-2 py-1 text-[10px] font-medium text-violet-400 transition hover:bg-violet-500/20"
+                            >
+                              <Pencil className="h-3 w-3" />
+                              Düzenle
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(s)}
+                              disabled={deletingStaffId === s.id}
+                              className="inline-flex items-center gap-1 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-[10px] font-medium text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-60"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Sil
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

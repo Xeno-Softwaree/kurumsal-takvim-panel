@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
@@ -24,6 +24,7 @@ import {
   ChevronRight,
   Pencil,
   Plus,
+  Search,
   Trash2,
   X,
 } from 'lucide-react';
@@ -38,9 +39,9 @@ function formatDate(d: string | null) {
 }
 
 function stockBadge(qty: number) {
-  if (qty === 0) return <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/20 text-red-400 font-semibold">Stok Yok</span>;
-  if (qty <= 5)  return <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500/20 text-amber-400 font-semibold">{qty} adet</span>;
-  return              <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-500/20 text-emerald-400 font-semibold">{qty} adet</span>;
+  if (qty === 0) return <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-400"><span className="h-1.5 w-1.5 rounded-full bg-red-400" />Stok Yok</span>;
+  if (qty <= 5)  return <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />Kritik ({qty})</span>;
+  return               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />Yeterli ({qty})</span>;
 }
 
 // ── Modal wrapper ────────────────────────────────────────────────────────────
@@ -87,6 +88,10 @@ export default function Inventory() {
   const [staffList, setStaffList] = useState<StaffDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+
+  // Search + category filter
+  const [invSearch, setInvSearch] = useState('');
+  const [invCategory, setInvCategory] = useState<string>('all');
 
   // Add item modal
   const [showAdd, setShowAdd] = useState(false);
@@ -277,53 +282,123 @@ export default function Inventory() {
     finally { setAssignLoading(false); }
   }
 
+  // ── Computed stats + filter ──────────────────────────────────────────────
+  const totalQtyAll   = items.reduce((s, i) => s + i.variants.reduce((vs, v) => vs + v.quantity, 0), 0);
+  const kritikCount   = items.reduce((s, i) => s + i.variants.filter(v => v.quantity <= 5).length, 0);
+  const categories    = useMemo(() => [...new Set(items.map(i => i.category).filter((c): c is string => !!c))], [items]);
+  const categoryOpts  = [{ key: 'all', label: 'Tümü' }, ...categories.map(c => ({ key: c, label: c }))];
+
+  const filteredItems = items.filter(item => {
+    const q = invSearch.trim().toLowerCase();
+    if (q && !item.name.toLowerCase().includes(q)) return false;
+    if (invCategory !== 'all' && item.category !== invCategory) return false;
+    return true;
+  });
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-5 p-1">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold flex items-center gap-2 text-app-text">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/15 ring-1 ring-app-border">
             <Package className="h-5 w-5 text-orange-400" />
-            Ekipman / Stok
-          </h1>
-          <p className="text-xs text-app-muted mt-0.5">{items.length} ürün</p>
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-app-text">Ekipman / Stok</h2>
+            <p className="text-xs text-app-muted">Ekipman, varyant ve zimmet takibi</p>
+          </div>
         </div>
         {isSuperAdmin && (
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-400"
           >
-            <PackagePlus className="h-4 w-4" />
-            Ürün Ekle
+            <PackagePlus className="h-3.5 w-3.5" />
+            Ekipman Ekle
           </button>
         )}
       </div>
 
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'TOPLAM',  value: items.length, unit: 'ürün',    dot: 'bg-blue-400'    },
+          { label: 'STOK',    value: totalQtyAll,  unit: 'adet',    dot: 'bg-emerald-400' },
+          { label: 'KRİTİK',  value: kritikCount,  unit: 'varyant', dot: 'bg-red-400'     },
+          { label: 'KATEGORİ',value: categories.length, unit: 'kategori', dot: 'bg-slate-400' },
+        ].map(({ label, value, unit, dot }) => (
+          <div key={label} className="rounded-xl border border-app-border bg-app-card px-4 py-3">
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-app-muted">{label}</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="stat-number text-2xl font-bold text-app-text">{value}</span>
+              <span className="text-xs text-app-muted">{unit}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Search + category filter chips */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative max-w-xs flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-app-muted" />
+          <input
+            value={invSearch}
+            onChange={(e) => setInvSearch(e.target.value)}
+            placeholder="Ürün adı ara…"
+            className="w-full rounded-lg border border-app-border bg-app-base py-2 pl-8 pr-3 text-xs text-app-text outline-none transition placeholder:text-app-muted focus:border-orange-400 focus:ring-2 focus:ring-orange-500/30"
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {categoryOpts.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setInvCategory(opt.key)}
+              className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                invCategory === opt.key
+                  ? 'border-orange-500 bg-orange-500 text-white'
+                  : 'border-app-border bg-app-base text-app-muted hover:bg-app-accent-soft'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading ? (
-        <div className="flex justify-center py-12 text-app-muted text-sm">Yükleniyor…</div>
-      ) : items.length === 0 ? (
-        <div className="text-center py-16 text-app-muted text-sm">Henüz ürün eklenmedi.</div>
+        <div className="py-12 text-center text-sm text-app-muted">Yükleniyor…</div>
+      ) : filteredItems.length === 0 ? (
+        <div className="py-16 text-center text-sm text-app-muted">
+          {invSearch || invCategory !== 'all' ? 'Arama kriterine uyan ürün bulunamadı.' : 'Henüz ürün eklenmedi.'}
+        </div>
       ) : (
-        <div className="space-y-3">
-          {items.map(item => {
+        <div className="space-y-2">
+          {filteredItems.map(item => {
             const isOpen = !collapsed.has(item.id);
             const totalQty = item.variants.reduce((s, v) => s + v.quantity, 0);
             return (
-              <div key={item.id} className="rounded-xl overflow-hidden"
-                style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+              <div key={item.id} className="overflow-hidden rounded-xl border border-app-border bg-app-card">
 
                 {/* Item header row */}
                 <div
-                  className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none hover:bg-app-accent-soft transition-colors"
+                  className="flex cursor-pointer select-none items-center gap-3 px-4 py-3 transition-colors hover:bg-app-accent-soft"
                   onClick={() => toggleCollapse(item.id)}
                 >
                   <span className="text-app-muted">
                     {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium text-sm text-app-text">{item.name}</span>
-                    {item.category && <span className="ml-2 text-xs text-app-muted">{item.category}</span>}
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm font-medium text-app-text">{item.name}</span>
+                    {item.category && (
+                      <span className="ml-2 rounded-full bg-app-accent-soft px-2 py-0.5 text-[10px] font-medium text-app-muted">
+                        {item.category}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {stockBadge(totalQty)}
@@ -331,17 +406,17 @@ export default function Inventory() {
                       <>
                         <button
                           onClick={e => { e.stopPropagation(); openEdit(item); }}
-                          className="p-1 rounded hover:bg-app-accent-soft transition-colors text-app-muted hover:text-blue-400"
+                          className="rounded p-1 text-app-muted transition-colors hover:bg-app-accent-soft hover:text-violet-400"
                           title="Düzenle"
                         ><Pencil className="h-3.5 w-3.5" /></button>
                         <button
                           onClick={e => { e.stopPropagation(); openAddVariant(item); }}
-                          className="p-1 rounded hover:bg-app-accent-soft transition-colors text-app-muted hover:text-emerald-400"
+                          className="rounded p-1 text-app-muted transition-colors hover:bg-app-accent-soft hover:text-emerald-400"
                           title="Varyant Ekle"
                         ><Plus className="h-3.5 w-3.5" /></button>
                         <button
                           onClick={e => { e.stopPropagation(); handleDelete(item); }}
-                          className="p-1 rounded hover:bg-app-accent-soft transition-colors text-app-muted hover:text-rose-400"
+                          className="rounded p-1 text-app-muted transition-colors hover:bg-app-accent-soft hover:text-rose-400"
                           title="Sil"
                         ><Trash2 className="h-3.5 w-3.5" /></button>
                       </>
@@ -353,37 +428,36 @@ export default function Inventory() {
                 {isOpen && (
                   <div className="border-t border-app-border">
                     {item.variants.length === 0 ? (
-                      <p className="text-xs text-app-muted px-6 py-3">Henüz varyant eklenmedi.</p>
+                      <p className="px-6 py-3 text-xs text-app-muted">Henüz varyant eklenmedi.</p>
                     ) : (
-                      <table className="w-full text-sm">
+                      <table className="w-full text-xs">
                         <thead>
-                          <tr className="text-xs text-app-muted border-b border-app-border">
-                            <th className="text-left px-6 py-2 font-medium">Varyant</th>
-                            <th className="text-left px-4 py-2 font-medium">Stok</th>
+                          <tr className="border-b border-app-border bg-app-base">
+                            <th className="px-6 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Varyant</th>
+                            <th className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-app-muted">Stok</th>
                             <th className="px-4 py-2" />
                           </tr>
                         </thead>
                         <tbody>
                           {item.variants.map(v => (
-                            <tr key={v.id} className="border-b border-app-border last:border-0 hover:bg-app-accent-soft transition-colors">
-                              <td className="px-6 py-2.5 text-sm text-app-text">{v.variant_label ?? '—'}</td>
+                            <tr key={v.id} className="table-row-hover border-b border-app-border last:border-0">
+                              <td className="px-6 py-2.5 text-app-text">{v.variant_label ?? '—'}</td>
                               <td className="px-4 py-2.5">{stockBadge(v.quantity)}</td>
                               <td className="px-4 py-2.5">
-                                <div className="flex items-center gap-2 justify-end">
-                                  {/* "Zimmetler" button: border+bg so visible on both themes */}
+                                <div className="flex items-center justify-end gap-2">
                                   <button
                                     onClick={() => openDetail(v, item)}
-                                    className="inline-flex items-center gap-1 rounded-md border border-app-border bg-app-base px-2.5 py-1 text-xs font-medium text-app-text hover:bg-app-accent-soft transition-colors"
+                                    className="inline-flex items-center rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-0.5 text-[10px] font-medium text-cyan-400 transition-colors hover:bg-cyan-500/20"
                                   >Zimmetler</button>
                                   {isSuperAdmin && (
                                     <>
                                       <button
                                         onClick={() => openAssign(v, item)}
-                                        className="inline-flex items-center rounded-md border border-orange-500/40 bg-orange-500/10 px-2.5 py-1 text-xs font-medium text-orange-400 hover:bg-orange-500/20 transition-colors"
+                                        className="inline-flex items-center rounded-md border border-orange-500/40 bg-orange-500/10 px-2.5 py-1 text-[10px] font-medium text-orange-400 transition-colors hover:bg-orange-500/20"
                                       >Zimmet Ver</button>
                                       <button
                                         onClick={() => openAdjust(v, item)}
-                                        className="inline-flex items-center rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 hover:bg-blue-500/20 transition-colors"
+                                        className="inline-flex items-center rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 py-1 text-[10px] font-medium text-blue-400 transition-colors hover:bg-blue-500/20"
                                       >Stok Ayarla</button>
                                     </>
                                   )}
