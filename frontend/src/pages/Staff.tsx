@@ -272,7 +272,7 @@ export default function Staff() {
     }
   };
 
-  const colSpan = isSuperAdmin ? 9 : 8;
+  const colSpan = isSuperAdmin ? 10 : 9;
 
   return (
     <div className="space-y-4">
@@ -329,6 +329,7 @@ export default function Staff() {
                 <th className="px-4 py-3 text-left">E-posta</th>
                 <th className="px-4 py-3 text-left">Telefon</th>
                 <th className="px-4 py-3 text-left">Birim</th>
+                <th className="px-4 py-3 text-left">Müdürlük</th>
                 <th className="px-4 py-3 text-left">Durum</th>
                 <th className="px-4 py-3 text-left">Zimmetler</th>
                 {isSuperAdmin && <th className="px-4 py-3 text-right">İşlemler</th>}
@@ -354,19 +355,15 @@ export default function Staff() {
                     <td className="px-4 py-2.5 text-app-muted">{s.email ?? '—'}</td>
                     <td className="px-4 py-2.5 text-app-muted">{s.phone ?? '—'}</td>
                     <td className="px-4 py-2.5">
-                      <div className="flex flex-col gap-0.5">
-                        {s.is_volunteer ? (
-                          <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
-                            Gönüllü
-                          </span>
-                        ) : (
-                          <span className="text-app-text">{s.department_name ?? '—'}</span>
-                        )}
-                        {s.directorate_name && (
-                          <span className="text-[10px] text-app-muted">{s.directorate_name}</span>
-                        )}
-                      </div>
+                      {s.is_volunteer ? (
+                        <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                          Gönüllü
+                        </span>
+                      ) : (
+                        <span className="text-app-text">{s.department_name ?? '—'}</span>
+                      )}
                     </td>
+                    <td className="px-4 py-2.5 text-app-muted">{s.directorate_name ?? '—'}</td>
                     <td className="px-4 py-2.5">
                       {s.status === 'active' ? (
                         <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
