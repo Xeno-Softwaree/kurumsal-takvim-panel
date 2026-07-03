@@ -1,20 +1,24 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Bell, Eye, EyeOff, FileText, Lock, Mail, ShieldCheck, Users } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+
+const FEATURES = [
+  { Icon: FileText, label: 'Etkinlik ve takvim yönetimi' },
+  { Icon: Users,    label: 'Personel ve ekip takibi'    },
+  { Icon: Bell,     label: 'Hatırlatıcı ve bildirimler' },
+  { Icon: ShieldCheck, label: 'Rol tabanlı erişim kontrolü' },
+];
 
 export default function Login() {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]       = useState<string | null>(null);
 
-  useEffect(() => {
-    setEmail('');
-    setPassword('');
-  }, []);
+  useEffect(() => { setEmail(''); setPassword(''); }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -28,157 +32,214 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
-      style={{ background: 'var(--app-bg)' }}
-    >
-      {/* Subtle ambient blobs */}
-      <div
-        className="pointer-events-none absolute -top-32 left-1/4 h-[500px] w-[500px] rounded-full opacity-[0.06]"
-        style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)', filter: 'blur(60px)' }}
-      />
-      <div
-        className="pointer-events-none absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full opacity-[0.04]"
-        style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)', filter: 'blur(80px)' }}
-      />
+    <div className="flex min-h-screen" style={{ background: 'var(--app-bg)' }}>
 
-      {/* Fine dot grid */}
+      {/* ── Left panel — brand anchor, always dark navy ─────────────────── */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
+        className="relative hidden lg:flex lg:w-[44%] xl:w-[40%] flex-col justify-between overflow-hidden p-12"
+        style={{ background: '#0b1c35' }}
+      >
+        {/* Subtle grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),' +
+              'linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
+        {/* Right edge separator */}
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-full w-px"
+          style={{
+            background:
+              'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.07) 25%, rgba(255,255,255,0.07) 75%, transparent 100%)',
+          }}
+        />
+        {/* Faint bottom-left accent */}
+        <div
+          className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(29,78,216,0.18) 0%, transparent 70%)' }}
+        />
 
-      <div className="relative z-10 w-full max-w-[400px] animate-fade-in">
-
-        {/* Logo + brand */}
-        <div className="mb-8 flex flex-col items-center gap-4 text-center">
-          <div className="relative">
+        <div className="relative z-10 flex flex-col gap-12">
+          {/* Org identity */}
+          <div className="flex items-center gap-3">
             <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl"
-              style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+              style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)' }}
             >
               <img
                 src="/logo.png"
-                alt="Tuzla Belediyesi"
-                className="h-10 w-10 object-contain"
-                onError={(e) => {
-                  const el = e.target as HTMLImageElement;
-                  el.style.display = 'none';
-                  (el.parentElement as HTMLElement).innerHTML = '<span class="text-2xl font-800 text-blue-400">T</span>';
-                }}
+                alt="Logo"
+                className="h-6 w-6 object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             </div>
-            {/* Glow ring */}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-2xl opacity-40 animate-pulse-subtle"
-              style={{ boxShadow: '0 0 20px rgba(59,130,246,0.3)' }}
-            />
-          </div>
-          <div>
-            <h1 className="text-[22px] font-800 leading-tight" style={{ color: 'var(--app-text)' }}>
+            <span
+              className="text-xs font-semibold uppercase tracking-widest"
+              style={{ color: 'rgba(255,255,255,0.38)' }}
+            >
               Tuzla Belediyesi
+            </span>
+          </div>
+
+          {/* Main heading */}
+          <div>
+            <h1 className="text-3xl font-bold leading-snug text-white">
+              Afet İşleri ve<br />Risk Yönetimi
             </h1>
-            <p className="text-[13px] font-500 mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
-              Afet İşleri ve Risk Yönetimi
+            <p className="mt-3 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.42)' }}>
+              Kurumsal yönetim bilgi sistemi — etkinlik koordinasyonu, personel takibi ve acil durum yönetimi için merkezi platform.
             </p>
           </div>
+
+          {/* Feature list */}
+          <ul className="space-y-3.5">
+            {FEATURES.map(({ Icon, label }) => (
+              <li key={label} className="flex items-center gap-3">
+                <div
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                  }}
+                >
+                  <Icon className="h-3.5 w-3.5" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                </div>
+                <span className="text-sm" style={{ color: 'rgba(255,255,255,0.48)' }}>{label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Card */}
-        <div
-          className="rounded-2xl p-7"
-          style={{
-            background: 'var(--card-bg)',
-            border: '1px solid var(--card-border)',
-            boxShadow: 'var(--shadow-lg)',
-          }}
-        >
-          {/* Card header */}
-          <div className="mb-6 flex items-center gap-3">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
-              style={{ background: 'rgba(59,130,246,0.1)', color: '#60a5fa' }}
-            >
-              <ShieldCheck className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="text-[14px] font-700 leading-tight" style={{ color: 'var(--app-text)' }}>
-                Yönetici Girişi
-              </h2>
-              <p className="text-[11px] mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
-                Güvenli admin portalı
-              </p>
-            </div>
+        {/* Bottom tag */}
+        <div className="relative z-10 flex items-center gap-2">
+          <ShieldCheck className="h-3.5 w-3.5" style={{ color: 'rgba(255,255,255,0.22)' }} />
+          <span
+            className="text-[11px] font-medium uppercase tracking-wider"
+            style={{ color: 'rgba(255,255,255,0.22)' }}
+          >
+            Yetkili personele özel sistem
+          </span>
+        </div>
+      </div>
+
+      {/* ── Right panel — theme-aware login form ─────────────────────────── */}
+      <div
+        className="flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-12"
+        style={{ background: 'var(--app-bg)' }}
+      >
+        {/* Mobile-only org header */}
+        <div className="mb-10 text-center lg:hidden">
+          <div
+            className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl"
+            style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.18)' }}
+          >
+            <img
+              src="/logo.png"
+              alt=""
+              className="h-7 w-7 object-contain"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          </div>
+          <p className="text-sm font-semibold text-app-text">Tuzla Belediyesi</p>
+          <p className="text-xs text-app-muted mt-0.5">Afet İşleri ve Risk Yönetimi</p>
+        </div>
+
+        <div className="w-full max-w-[340px]">
+          {/* Form heading */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-app-text">Sisteme Giriş</h2>
+            <p className="mt-1 text-sm text-app-muted">Kurumsal kimlik bilgilerinizle devam edin</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
-            <div className="space-y-1.5">
-              <label className="block text-[11px] font-600 uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>
-                Kurumsal E-posta
+            <div>
+              <label
+                htmlFor="login-email"
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--app-text-muted)' }}
+              >
+                E-posta
               </label>
               <div className="relative">
                 <Mail
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
                   style={{ color: 'var(--app-text-muted)' }}
                 />
                 <input
-                  id="email"
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@tuzla.gov.tr"
                   autoComplete="email"
                   required
-                  className="block w-full rounded-lg py-2.5 pl-9 pr-3 text-[13px] outline-none transition-all duration-200"
+                  className="block w-full rounded-lg py-2.5 pl-9 pr-3 text-sm outline-none transition-all"
                   style={{
-                    background: 'var(--app-bg)',
-                    border: '1px solid var(--card-border)',
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--border-strong)',
                     color: 'var(--app-text)',
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = 'rgba(59,130,246,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)'; }}
-                  onBlur={(e)  => { e.target.style.borderColor = 'var(--card-border)';    e.target.style.boxShadow = 'none'; }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(59,130,246,0.5)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--border-strong)';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
             </div>
 
             {/* Password */}
-            <div className="space-y-1.5">
-              <label className="block text-[11px] font-600 uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>
-                Güvenlik Şifresi
+            <div>
+              <label
+                htmlFor="login-password"
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--app-text-muted)' }}
+              >
+                Şifre
               </label>
               <div className="relative">
                 <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
                   style={{ color: 'var(--app-text-muted)' }}
                 />
                 <input
-                  id="password"
+                  id="login-password"
                   type={showPass ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimum 8 karakter"
+                  placeholder="••••••••"
                   autoComplete="current-password"
                   required
                   minLength={8}
-                  className="block w-full rounded-lg py-2.5 pl-9 pr-10 text-[13px] outline-none transition-all duration-200"
+                  className="block w-full rounded-lg py-2.5 pl-9 pr-10 text-sm outline-none transition-all"
                   style={{
-                    background: 'var(--app-bg)',
-                    border: '1px solid var(--card-border)',
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--border-strong)',
                     color: 'var(--app-text)',
                   }}
-                  onFocus={(e) => { e.target.style.borderColor = 'rgba(59,130,246,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)'; }}
-                  onBlur={(e)  => { e.target.style.borderColor = 'var(--card-border)';    e.target.style.boxShadow = 'none'; }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(59,130,246,0.5)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--border-strong)';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-80"
-                  style={{ color: 'var(--app-text-muted)' }}
                   tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+                  style={{ color: 'var(--app-text-muted)' }}
                 >
                   {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -188,14 +249,15 @@ export default function Login() {
             {/* Error */}
             {error && (
               <div
-                className="rounded-lg px-4 py-3 text-[12px] font-500 animate-slide-up"
+                className="flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-sm"
                 style={{
                   background: 'rgba(244,63,94,0.08)',
-                  border: '1px solid rgba(244,63,94,0.25)',
+                  border: '1px solid rgba(244,63,94,0.2)',
                   color: '#fda4af',
                 }}
               >
-                {error}
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
@@ -203,13 +265,10 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-[13px] font-700 text-white transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{
-                background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
-                boxShadow: '0 4px 14px rgba(59,130,246,0.3)',
-              }}
-              onMouseEnter={(e) => { if (!loading) (e.target as HTMLElement).style.boxShadow = '0 6px 20px rgba(59,130,246,0.45)'; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.boxShadow = '0 4px 14px rgba(59,130,246,0.3)'; }}
+              className="flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ background: '#1d4ed8', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }}
+              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#2563eb'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#1d4ed8'; }}
             >
               {loading ? (
                 <>
@@ -217,31 +276,26 @@ export default function Login() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  <span>Kimlik Doğrulanıyor…</span>
+                  Kimlik Doğrulanıyor…
                 </>
               ) : (
-                <span>Giriş Yap</span>
+                'Giriş Yap'
               )}
             </button>
           </form>
 
-          {/* Footer meta */}
+          {/* Footer */}
           <div
-            className="mt-6 flex items-center justify-between pt-5 text-[10px] font-600 uppercase tracking-wider"
-            style={{ borderTop: '1px solid var(--card-border)', color: 'var(--app-text-muted)' }}
+            className="mt-8 flex items-center justify-between border-t pt-5 text-[11px]"
+            style={{ borderColor: 'var(--card-border)', color: 'var(--app-text-muted)' }}
           >
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="h-3 w-3 text-emerald-500" />
               SSL Güvenli Bağlantı
             </span>
-            <span>Sistem v2.0</span>
+            <span>© 2026 Tuzla Belediyesi</span>
           </div>
         </div>
-
-        {/* Copyright */}
-        <p className="mt-6 text-center text-[11px]" style={{ color: 'var(--app-text-subtle)' }}>
-          © 2026 Tuzla Belediyesi — Afet Yönetim Bilgi Sistemi
-        </p>
       </div>
     </div>
   );
