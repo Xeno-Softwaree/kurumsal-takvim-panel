@@ -29,12 +29,12 @@ export default function Login() {
       className="relative flex min-h-screen flex-col items-center justify-center px-6 py-16"
       style={{ background: 'var(--app-bg)' }}
     >
-      {/* Subtle diagonal stripe texture */}
+      {/* Subtle diagonal stripe texture — light/dark aware via CSS var */}
       <div
         className="pointer-events-none fixed inset-0"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(135deg, transparent, transparent 48px, rgba(255,255,255,0.013) 48px, rgba(255,255,255,0.013) 49px)',
+            'repeating-linear-gradient(135deg, transparent, transparent 48px, var(--card-border) 48px, var(--card-border) 49px)',
         }}
       />
 
@@ -42,7 +42,17 @@ export default function Login() {
 
         {/* ── Emblem + identity ─────────────────────────────────────────── */}
         <div className="mb-10 flex flex-col items-center gap-4 text-center">
-          {/* Double-ring badge */}
+          {/* Double-ring badge with blue glow halo */}
+          <div className="relative">
+            {/* Blue light behind logo — uses existing --accent-glow token, works in both themes */}
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: 160,
+                height: 160,
+                background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 68%)',
+              }}
+            />
           <div
             className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full"
             style={{ border: '1.5px solid var(--border-strong)' }}
@@ -65,6 +75,7 @@ export default function Login() {
                 }}
               />
             </div>
+          </div>
           </div>
 
           {/* Org text */}
