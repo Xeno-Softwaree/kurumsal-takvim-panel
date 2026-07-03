@@ -24,9 +24,11 @@ router.get('/', async (req, res) => {
         END AS tc_no,
         s.birth_date, s.email, s.phone,
         s.department_id, d.name AS department_name,
+        s.directorate_id, dir.name AS directorate_name,
         s.is_volunteer, s.status, s.created_at, s.updated_at
       FROM staff s
       LEFT JOIN departments d ON s.department_id = d.id
+      LEFT JOIN directorates dir ON s.directorate_id = dir.id
       ORDER BY s.last_name ASC, s.first_name ASC
     `);
     return res.json(rows);
@@ -45,9 +47,11 @@ router.get('/:id', async (req, res) => {
         s.id, s.first_name, s.last_name, s.tc_no,
         s.birth_date, s.email, s.phone,
         s.department_id, d.name AS department_name,
+        s.directorate_id, dir.name AS directorate_name,
         s.is_volunteer, s.status, s.created_by_admin_id, s.created_at, s.updated_at
       FROM staff s
       LEFT JOIN departments d ON s.department_id = d.id
+      LEFT JOIN directorates dir ON s.directorate_id = dir.id
       WHERE s.id = $1
     `, [id]);
 
@@ -80,7 +84,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/staff
 router.post('/', requireSuperAdmin, validateStaff, async (req, res) => {
   try {
-    const { first_name, last_name, tc_no, birth_date, email, phone, department_id, is_volunteer, status } = req.body;
+    const { first_name, last_name, tc_no, birth_date, email, phone, department_id, directorate_id, is_volunteer, status } = req.body;
 
     if (tc_no) {
       const tcConflict = await get('SELECT id FROM staff WHERE tc_no = $1', [tc_no]);
@@ -89,10 +93,10 @@ router.post('/', requireSuperAdmin, validateStaff, async (req, res) => {
 
     const row = await get(`
       INSERT INTO staff
-        (first_name, last_name, tc_no, birth_date, email, phone, department_id, is_volunteer, status, created_by_admin_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (first_name, last_name, tc_no, birth_date, email, phone, department_id, directorate_id, is_volunteer, status, created_by_admin_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
-    `, [first_name, last_name, tc_no || null, birth_date || null, email || null, phone || null, department_id, is_volunteer, status, req.admin.id]);
+    `, [first_name, last_name, tc_no || null, birth_date || null, email || null, phone || null, department_id, directorate_id || null, is_volunteer, status, req.admin.id]);
 
     await run(
       'INSERT INTO activity_logs (admin_id, action, entity_type, entity_id, meta) VALUES ($1, $2, $3, $4, $5)',
@@ -112,7 +116,7 @@ router.post('/', requireSuperAdmin, validateStaff, async (req, res) => {
 router.put('/:id', requireSuperAdmin, validateStaff, async (req, res) => {
   try {
     const { id } = req.params;
-    const { first_name, last_name, tc_no, birth_date, email, phone, department_id, is_volunteer, status } = req.body;
+    const { first_name, last_name, tc_no, birth_date, email, phone, department_id, directorate_id, is_volunteer, status } = req.body;
 
     const current = await get('SELECT tc_no FROM staff WHERE id = $1', [id]);
     if (!current) return res.status(404).json({ error: 'Personel bulunamadı' });
@@ -128,11 +132,11 @@ router.put('/:id', requireSuperAdmin, validateStaff, async (req, res) => {
     const row = await get(`
       UPDATE staff SET
         first_name = $1, last_name = $2, tc_no = $3, birth_date = $4,
-        email = $5, phone = $6, department_id = $7, is_volunteer = $8,
-        status = $9, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $10
+        email = $5, phone = $6, department_id = $7, directorate_id = $8,
+        is_volunteer = $9, status = $10, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $11
       RETURNING *
-    `, [first_name, last_name, finalTcNo, birth_date || null, email || null, phone || null, department_id, is_volunteer, status, id]);
+    `, [first_name, last_name, finalTcNo, birth_date || null, email || null, phone || null, department_id, directorate_id || null, is_volunteer, status, id]);
 
     await run(
       'INSERT INTO activity_logs (admin_id, action, entity_type, entity_id, meta) VALUES ($1, $2, $3, $4, $5)',

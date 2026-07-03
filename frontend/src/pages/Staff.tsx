@@ -1,9 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Building2, Pencil, Plus, Trash2, Users, X } from 'lucide-react';
+import { Building2, Landmark, Pencil, Plus, Trash2, Users, X } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmDialog';
 import { getDepartments, createDepartment, deleteDepartment, type DepartmentDto } from '../api/departments';
+import { getDirectorates, createDirectorate, deleteDirectorate, type DirectorateDto } from '../api/directorates';
 import { getStaffList, getStaffMember, createStaff, updateStaff, deleteStaff, type StaffDto, type StaffDetailDto, type StaffInput } from '../api/staff';
 import { returnAssignment } from '../api/inventory';
 
@@ -30,6 +31,7 @@ export default function Staff() {
 
   const [staffList, setStaffList] = useState<StaffDto[]>([]);
   const [departments, setDepartments] = useState<DepartmentDto[]>([]);
+  const [directorates, setDirectorates] = useState<DirectorateDto[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Staff form modal state
@@ -45,6 +47,7 @@ export default function Staff() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [deptSelectValue, setDeptSelectValue] = useState<SelectValue>('');
+  const [directorateId, setDirectorateId] = useState<string>('');
   const [staffStatus, setStaffStatus] = useState<'active' | 'inactive'>('active');
 
   // Department modal state
@@ -53,6 +56,13 @@ export default function Staff() {
   const [deptSaving, setDeptSaving] = useState(false);
   const [deptError, setDeptError] = useState<string | null>(null);
   const [deletingDeptId, setDeletingDeptId] = useState<number | null>(null);
+
+  // Directorate modal state
+  const [dirModalOpen, setDirModalOpen] = useState(false);
+  const [dirName, setDirName] = useState('');
+  const [dirSaving, setDirSaving] = useState(false);
+  const [dirError, setDirError] = useState<string | null>(null);
+  const [deletingDirId, setDeletingDirId] = useState<number | null>(null);
 
   const [deletingStaffId, setDeletingStaffId] = useState<number | null>(null);
 
@@ -65,9 +75,10 @@ export default function Staff() {
   const load = async () => {
     setLoading(true);
     try {
-      const [sl, dl] = await Promise.all([getStaffList(), getDepartments()]);
+      const [sl, dl, dirl] = await Promise.all([getStaffList(), getDepartments(), getDirectorates()]);
       setStaffList(sl || []);
       setDepartments(dl || []);
+      setDirectorates(dirl || []);
     } catch (err) {
       showError(extractError(err));
     } finally {
@@ -89,6 +100,7 @@ export default function Staff() {
     setEmail('');
     setPhone('');
     setDeptSelectValue('');
+    setDirectorateId('');
     setStaffStatus('active');
     setFormError(null);
     setFormOpen(true);
@@ -103,6 +115,7 @@ export default function Staff() {
     setEmail(s.email || '');
     setPhone(s.phone || '');
     setDeptSelectValue(s.is_volunteer ? 'volunteer' : (s.department_id ? String(s.department_id) : ''));
+    setDirectorateId(s.directorate_id ? String(s.directorate_id) : '');
     setStaffStatus(s.status);
     setFormError(null);
     setFormOpen(true);
@@ -111,6 +124,7 @@ export default function Staff() {
   const buildStaffInput = (): StaffInput => {
     const isVol = deptSelectValue === 'volunteer';
     const deptId = !isVol && deptSelectValue ? Number(deptSelectValue) : null;
+    const dirId = directorateId ? Number(directorateId) : null;
     return {
       first_name: firstName,
       last_name: lastName,
@@ -119,6 +133,7 @@ export default function Staff() {
       email: email || undefined,
       phone: phone || undefined,
       department_id: deptId,
+      directorate_id: dirId,
       is_volunteer: isVol,
       status: staffStatus,
     };
@@ -195,6 +210,38 @@ export default function Staff() {
     }
   };
 
+  const handleAddDir = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!dirName.trim()) return;
+    setDirSaving(true);
+    setDirError(null);
+    try {
+      await createDirectorate(dirName.trim());
+      setDirName('');
+      const dirl = await getDirectorates();
+      setDirectorates(dirl || []);
+    } catch (err) {
+      setDirError(extractError(err));
+    } finally {
+      setDirSaving(false);
+    }
+  };
+
+  const handleDeleteDir = async (id: number) => {
+    if (!await confirm('Bu müdürlüğü silmek istediğinize emin misiniz?', { variant: 'danger' })) return;
+    setDeletingDirId(id);
+    setDirError(null);
+    try {
+      await deleteDirectorate(id);
+      const dirl = await getDirectorates();
+      setDirectorates(dirl || []);
+    } catch (err) {
+      setDirError(extractError(err));
+    } finally {
+      setDeletingDirId(null);
+    }
+  };
+
   const openZimmet = async (s: StaffDto) => {
     setZimmetLoading(true);
     setZimmetError(null);
@@ -252,6 +299,14 @@ export default function Staff() {
             </button>
             <button
               type="button"
+              onClick={() => { setDirModalOpen(true); setDirError(null); }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-base px-3 py-1.5 text-xs font-semibold text-app-text shadow-sm transition hover:bg-app-accent-soft"
+            >
+              <Landmark className="h-3.5 w-3.5" />
+              <span>Müdürlükleri Yönet</span>
+            </button>
+            <button
+              type="button"
               onClick={openAdd}
               className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 px-3 py-1.5 text-xs font-semibold text-slate-50 shadow-sm transition hover:bg-indigo-400"
             >
@@ -299,13 +354,18 @@ export default function Staff() {
                     <td className="px-4 py-2.5 text-app-muted">{s.email ?? '—'}</td>
                     <td className="px-4 py-2.5 text-app-muted">{s.phone ?? '—'}</td>
                     <td className="px-4 py-2.5">
-                      {s.is_volunteer ? (
-                        <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
-                          Gönüllü
-                        </span>
-                      ) : (
-                        <span className="text-app-text">{s.department_name ?? '—'}</span>
-                      )}
+                      <div className="flex flex-col gap-0.5">
+                        {s.is_volunteer ? (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                            Gönüllü
+                          </span>
+                        ) : (
+                          <span className="text-app-text">{s.department_name ?? '—'}</span>
+                        )}
+                        {s.directorate_name && (
+                          <span className="text-[10px] text-app-muted">{s.directorate_name}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-2.5">
                       {s.status === 'active' ? (
@@ -445,19 +505,34 @@ export default function Staff() {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs font-medium text-app-text">Birim / Kategori *</label>
-                <select
-                  value={deptSelectValue}
-                  onChange={(e) => setDeptSelectValue(e.target.value as SelectValue)}
-                  className="block w-full rounded-lg border border-app-border bg-app-base px-3 py-2 text-xs text-app-text outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/40"
-                >
-                  <option value="">-- Seçin --</option>
-                  {departments.map((d) => (
-                    <option key={d.id} value={String(d.id)}>{d.name}</option>
-                  ))}
-                  <option value="volunteer">Gönüllü</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-app-text">Birim / Kategori *</label>
+                  <select
+                    value={deptSelectValue}
+                    onChange={(e) => setDeptSelectValue(e.target.value as SelectValue)}
+                    className="block w-full rounded-lg border border-app-border bg-app-base px-3 py-2 text-xs text-app-text outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/40"
+                  >
+                    <option value="">-- Seçin --</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={String(d.id)}>{d.name}</option>
+                    ))}
+                    <option value="volunteer">Gönüllü</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-app-text">Müdürlük</label>
+                  <select
+                    value={directorateId}
+                    onChange={(e) => setDirectorateId(e.target.value)}
+                    className="block w-full rounded-lg border border-app-border bg-app-base px-3 py-2 text-xs text-app-text outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/40"
+                  >
+                    <option value="">-- Opsiyonel --</option>
+                    {directorates.map((d) => (
+                      <option key={d.id} value={String(d.id)}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -552,6 +627,76 @@ export default function Staff() {
               >
                 Kapat
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Directorate management modal */}
+      {dirModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-md overflow-hidden rounded-2xl border shadow-2xl animate-slide-up"
+            style={{ background: 'var(--card-bg)', borderColor: 'var(--border-strong)' }}
+          >
+            <div className="flex items-center justify-between border-b border-app-border px-5 py-4">
+              <h3 className="text-sm font-semibold text-app-text">Müdürlükleri Yönet</h3>
+              <button
+                type="button"
+                onClick={() => setDirModalOpen(false)}
+                className="text-app-muted transition hover:text-app-text"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 p-5">
+              <form onSubmit={handleAddDir} className="flex gap-2">
+                <input
+                  value={dirName}
+                  onChange={(e) => setDirName(e.target.value)}
+                  placeholder="Yeni müdürlük adı"
+                  className="flex-1 rounded-lg border border-app-border bg-app-base px-3 py-2 text-xs text-app-text outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/40"
+                />
+                <button
+                  type="submit"
+                  disabled={dirSaving || !dirName.trim()}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500 px-3 py-2 text-xs font-semibold text-slate-50 shadow-sm transition hover:bg-indigo-400 disabled:opacity-60"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Ekle
+                </button>
+              </form>
+
+              {dirError && (
+                <div className="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                  {dirError}
+                </div>
+              )}
+
+              <ul className="max-h-64 space-y-1.5 overflow-y-auto">
+                {directorates.length === 0 ? (
+                  <li className="py-4 text-center text-xs italic text-app-muted">Müdürlük bulunamadı.</li>
+                ) : (
+                  directorates.map((d) => (
+                    <li
+                      key={d.id}
+                      className="flex items-center justify-between rounded-lg border border-app-border bg-app-base px-3 py-2 text-xs"
+                    >
+                      <span className="font-medium text-app-text">{d.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDir(d.id)}
+                        disabled={deletingDirId === d.id}
+                        className="inline-flex items-center gap-1 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[10px] font-medium text-rose-300 transition hover:bg-rose-500/20 disabled:opacity-60"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Sil
+                      </button>
+                    </li>
+                  ))
+                )}
+              </ul>
             </div>
           </div>
         </div>

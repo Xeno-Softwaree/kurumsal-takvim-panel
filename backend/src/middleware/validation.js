@@ -84,7 +84,7 @@ function validateDepartment(req, res, next) {
 }
 
 function validateStaff(req, res, next) {
-  const { first_name, last_name, tc_no, email, phone, department_id, is_volunteer, status } = req.body || {};
+  const { first_name, last_name, tc_no, email, phone, department_id, directorate_id, is_volunteer, status } = req.body || {};
 
   if (!first_name || typeof first_name !== 'string' || !first_name.trim()) {
     return res.status(400).json({ error: 'Ad zorunludur' });
@@ -117,6 +117,11 @@ function validateStaff(req, res, next) {
     return res.status(400).json({ error: 'Geçersiz durum değeri' });
   }
 
+  const dirId = directorate_id ? parseInt(directorate_id, 10) : null;
+  if (directorate_id !== undefined && directorate_id !== null && directorate_id !== '' && !dirId) {
+    return res.status(400).json({ error: 'Geçersiz müdürlük ID değeri' });
+  }
+
   req.body.first_name = sanitizeString(first_name);
   req.body.last_name = sanitizeString(last_name);
   req.body.tc_no = tcRaw || null;
@@ -124,6 +129,7 @@ function validateStaff(req, res, next) {
   req.body.phone = phone ? sanitizeString(phone) : null;
   req.body.is_volunteer = isVol;
   req.body.department_id = deptId;
+  req.body.directorate_id = dirId;
   req.body.status = cleanStatus;
 
   return next();

@@ -10,6 +10,8 @@ export type StaffDto = {
   phone: string | null;
   department_id: number | null;
   department_name: string | null;
+  directorate_id: number | null;
+  directorate_name: string | null;
   is_volunteer: boolean;
   status: 'active' | 'inactive';
   created_at: string;
@@ -39,6 +41,7 @@ export type StaffInput = {
   email?: string;
   phone?: string;
   department_id?: number | null;
+  directorate_id?: number | null;
   is_volunteer: boolean;
   status?: 'active' | 'inactive';
 };

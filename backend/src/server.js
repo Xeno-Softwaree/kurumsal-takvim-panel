@@ -22,6 +22,7 @@ const notificationRoutes = require('./routes/notifications');
 const documentRoutes = require('./routes/documents');
 const reminderRoutes = require('./routes/reminders');
 const departmentRoutes = require('./routes/departments');
+const directorateRoutes = require('./routes/directorates');
 const staffRoutes = require('./routes/staff');
 const inventoryRoutes = require('./routes/inventory');
 const { startScheduler } = require('./services/scheduler');
@@ -86,6 +87,7 @@ async function bootstrap() {
   app.use('/api/documents', documentRoutes);
   app.use('/api/reminders', reminderRoutes);
   app.use('/api/departments', departmentRoutes);
+  app.use('/api/directorates', directorateRoutes);
   app.use('/api/staff', staffRoutes);
   app.use('/api/inventory', inventoryRoutes);
 

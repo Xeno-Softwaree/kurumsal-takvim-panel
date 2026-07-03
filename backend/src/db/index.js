@@ -201,6 +201,16 @@ async function initDatabase() {
     `);
     console.log('✅ departments table ready');
 
+    // Create directorates table (independent organizational layer)
+    await run(`
+      CREATE TABLE IF NOT EXISTS directorates (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ directorates table ready');
+
     // Create staff table
     await run(`
       CREATE TABLE IF NOT EXISTS staff (
@@ -225,6 +235,10 @@ async function initDatabase() {
     `);
     console.log('✅ staff table ready');
 
+    // Add directorate_id to staff if not exists (independent of department/volunteer constraint)
+    await run(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS directorate_id INTEGER REFERENCES directorates(id)`);
+    console.log('✅ staff.directorate_id column ready');
+
     // Create indexes for performance
     await run(`CREATE INDEX IF NOT EXISTS idx_events_date ON events(date)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_events_is_active ON events(is_active)`);
@@ -246,6 +260,7 @@ async function initDatabase() {
     await run(`CREATE INDEX IF NOT EXISTS idx_staff_department_id ON staff(department_id)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_staff_status ON staff(status)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_staff_is_volunteer ON staff(is_volunteer)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_staff_directorate_id ON staff(directorate_id)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_departments_name ON departments(name)`);
 
     // Create inventory tables
