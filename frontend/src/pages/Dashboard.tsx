@@ -35,8 +35,8 @@ const WIDGET_ORDER_KEY = 'ktakvim-dashboard-widget-order';
 const DEFAULT_ORDER = ['upcoming', 'pie', 'bar', 'line'];
 
 /* ─── Skeleton primitives ─────────────────────────── */
-function Sk({ className = '' }: { className?: string }) {
-  return <div className={`skeleton ${className}`} />;
+function Sk({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+ return <div className={`skeleton ${className}`} style={style} />;
 }
 
 function StatCardSkeleton() {
