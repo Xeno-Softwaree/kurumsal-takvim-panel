@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import AdminLayout from './layout/AdminLayout';
 import { ToastProvider } from './components/Toast';
@@ -65,7 +65,8 @@ function PageSkeleton() {
 
 function PrivateRoute({ children }: { children: ReactElement }) {
   const { token } = useAuth();
-  if (!token) return <Navigate to="/login" replace />;
+  const location = useLocation();
+  if (!token) return <Navigate to="/login" state={{ from: location }} replace />;
   return children;
 }
 

@@ -2,8 +2,7 @@ const express = require('express');
 const { all, get, run } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { validateEvent } = require('../middleware/validation');
-const { sendMail } = require('../services/mailer');
-const { sendEventCreatedMail, sendEventReminderMail } = require('../services/mail');
+const { sendEventCreatedMail, sendEventDateChangedMail, sendEventReminderMail } = require('../services/mail');
 const { createNotificationForAllAdminUsers } = require('../services/notifications');
 
 const router = express.Router();
@@ -317,20 +316,13 @@ router.put('/:id', validateEvent, async (req, res) => {
     if (existing.date !== date) {
       try {
         const rows = await all('SELECT email FROM admin_users');
-        const to = (rows || [])
-          .map((r) => r && r.email)
-          .filter(Boolean)
-          .join(',');
-        if (to) {
-          await sendMail({
-            to,
-            subject: `Etkinlik Tarihi Güncellendi: ${title}`,
-            text: `Bir etkinliğin tarihi güncellendi.\n\nBaşlık: ${title}\nEski Tarih: ${new Date(
-              existing.date
-            ).toLocaleString('tr-TR')}\nYeni Tarih: ${new Date(
-              date
-            ).toLocaleString('tr-TR')}\nKategori: ${type || existing.type || '-'}\nKatılımcı Sayısı: ${participantCount || existing.participant_count || 0
-              }\n\nGüncelleyen: ${req.admin.email}`,
+        const recipients = (rows || []).map((r) => r && r.email).filter(Boolean);
+        if (recipients.length) {
+          setImmediate(() => {
+            sendEventDateChangedMail(recipients, updated, existing.date, date, req.admin.email).catch((err) => {
+              // eslint-disable-next-line no-console
+              console.warn('Failed to send date change notification email:', err);
+            });
           });
         }
       } catch (err) {
@@ -361,7 +353,7 @@ router.post('/:id/send-reminder', async (req, res) => {
   };
 
   try {
-    const event = await get('SELECT id, title, date FROM events WHERE id = $1', [id]);
+    const event = await get('SELECT id, title, date, type, participant_count, department FROM events WHERE id = $1', [id]);
     if (!event) return res.status(404).json({ error: 'Etkinlik bulunamadı' });
 
     const resolved = new Set();

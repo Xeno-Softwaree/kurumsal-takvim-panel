@@ -1,8 +1,7 @@
 const cron = require('node-cron');
 const { all, run } = require('../db');
 const { defaultAdminEmail } = require('../config/env');
-const { sendDailySummaryMail } = require('./mail');
-const { sendMail } = require('./mailer');
+const { sendDailySummaryMail, sendEventReminderMail } = require('./mail');
 const { createNotificationForAllAdmins } = require('./notifications');
 
 function getIstanbulYmd(date) {
@@ -96,23 +95,10 @@ async function processReminders() {
         );
         if (delivered && delivered.length) continue;
 
-        const subject = `Hatırlatıcı: ${event.title} (${stage.label} kaldı)`;
-        const text = `Etkinlik hatırlatması (${stage.label} kaldı).\n\nBaşlık: ${event.title}\nTarih: ${new Date(
-          event.date
-        ).toLocaleString('tr-TR')}\nKategori: ${event.type || '-'}\nKatılımcı Sayısı: ${
-          Number.isFinite(Number(event.participant_count))
-            ? Number(event.participant_count)
-            : 0
-        }\nDepartman: ${event.department || '-'}`;
-
         try {
           if (emails.length) {
             // eslint-disable-next-line no-await-in-loop
-            await sendMail({
-              to: emails.join(','),
-              subject,
-              text,
-            });
+            await sendEventReminderMail(emails, event, { stageLabel: stage.label, isAuto: true });
           }
 
           // eslint-disable-next-line no-await-in-loop

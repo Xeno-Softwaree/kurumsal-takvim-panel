@@ -181,15 +181,21 @@ export default function CalendarPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const focusDate = params.get('focusDate');
-    const focusEventIdRaw = params.get('focusEventId');
+    // Support both ?eventId= (mail deep-links) and ?focusEventId= (internal navigation)
+    const focusEventIdRaw = params.get('eventId') || params.get('focusEventId');
     const focusEventId = focusEventIdRaw ? Number(focusEventIdRaw) : null;
     if (focusAppliedRef.current) return;
     if (!focusDate && !focusEventId) return;
 
     if (focusEventId && Number.isFinite(focusEventId)) {
       const ev = events.find((x) => x.id === focusEventId);
-      if (!ev) return;
-      openEdit(ev);
+      if (!ev) {
+        // Keep waiting until events have loaded; if still not found after load, the
+        // event was deleted — fall through silently (do not return early).
+        if (!hasFetched) return;
+      } else {
+        openEdit(ev);
+      }
     }
 
     if (focusDate && calendarRef.current) {
@@ -203,9 +209,10 @@ export default function CalendarPage() {
     focusAppliedRef.current = true;
     params.delete('focusDate');
     params.delete('focusEventId');
+    params.delete('eventId');
     const next = params.toString();
     navigate(next ? `/calendar?${next}` : '/calendar', { replace: true });
-  }, [events, location.search, navigate]);
+  }, [events, hasFetched, location.search, navigate]);
 
   const labelOptions = useMemo(() => {
     return (labels || [])

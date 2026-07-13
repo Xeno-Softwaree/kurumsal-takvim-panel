@@ -25,3 +25,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 kurumsal-takvim-panel-git/
+
+# Claude Code local files
+.claude/
+skills-lock.json

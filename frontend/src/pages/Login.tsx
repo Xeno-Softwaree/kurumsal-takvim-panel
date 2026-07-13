@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import LogoIntro from '../components/LogoIntro';
@@ -7,6 +7,7 @@ import LogoIntro from '../components/LogoIntro';
 export default function Login() {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -22,7 +23,12 @@ export default function Login() {
     setError(null);
     try {
       await login(email, password);
-      navigate('/');
+      const from = (location.state as { from?: { pathname: string; search: string; hash: string } })?.from;
+      if (from?.pathname) {
+        navigate(`${from.pathname}${from.search}${from.hash}`, { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Giriş sırasında hata oluştu');
     }
